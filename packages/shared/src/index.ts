@@ -13,6 +13,7 @@ export type { ExclusionReason, SessionEligibility } from "./logic/session-eligib
 export { folderMatchesRoot, matchingRoot, normalizeAbsolutePath } from "./logic/selected-folders.js";
 export {
   macHelperDownloadNote,
+  macHelperInstallCommand,
   offerMacHelperDownload,
   stagingMacHelperDownloadUrl,
   stagingWebOrigin,

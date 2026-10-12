@@ -1,6 +1,6 @@
-import { macHelperDownloadNote, offerMacHelperDownload, stagingMacHelperDownloadUrl } from "@apm/shared";
+import { macHelperDownloadNote, macHelperInstallCommand, offerMacHelperDownload, stagingMacHelperDownloadUrl } from "@apm/shared";
 
-export { macHelperDownloadNote, offerMacHelperDownload, stagingMacHelperDownloadUrl };
+export { macHelperDownloadNote, macHelperInstallCommand, offerMacHelperDownload, stagingMacHelperDownloadUrl };
 
 /** Local dev can preview the staging note with ?siteOrigin= the staging site. Production builds drop this. */
 export function currentSiteOrigin(): string {
