@@ -75,6 +75,8 @@ if (packaged.length === 1) {
   execFileSync("lipo", ["-create", ...natives, "-output", findNative(join(collectorDir, "node_modules"))]);
 }
 chmodSync(join(resources, "node"), 0o755);
+// npm leaves .bin links that point at the build cache. codesign rejects a bundle that contains them.
+rmSync(join(collectorDir, "node_modules", ".bin"), { recursive: true, force: true });
 
 const menuOut = join(macos, "Automatic Project Map");
 if (menuBins.length === 1) {
