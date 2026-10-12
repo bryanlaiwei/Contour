@@ -1,0 +1,7 @@
+[build]
+builder = "RAILPACK"
+buildCommand = "npm run build:server"
+
+[deploy]
+startCommand = "npm run start:hosted"
+restartPolicyType = "ON_FAILURE"

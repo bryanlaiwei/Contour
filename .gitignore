@@ -21,6 +21,8 @@ supabase/.branches/
 *.sqlite-shm
 
 .DS_Store
+.vercel/
+.railway/
 .idea/
 .vscode/
 *.log
