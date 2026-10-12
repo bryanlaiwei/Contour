@@ -2,7 +2,7 @@ import { Check, ChevronDown, CircleAlert, ExternalLink, LoaderCircle, LogOut, Ma
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ApiError, api, errorMessage, type Graph, type Me, type Project } from "../api";
 import { releaseSharesProjects } from "../release";
-import { productName, timeAgo } from "../format";
+import { productName } from "../format";
 import { EmptyMap } from "./EmptyMap";
 import { GithubMark, LogoMark } from "./GithubMark";
 import { MapCanvas } from "./map/MapCanvas";
