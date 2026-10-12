@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
 import { ApiError, api, errorMessage, type Me, type Project } from "./api";
-import { HelperPage } from "./components/HelperPage";
 import { Onboarding } from "./components/Onboarding";
 import { SignIn } from "./components/SignIn";
 import { ToastProvider } from "./components/toast";
@@ -20,6 +19,12 @@ function AppContent() {
   const [projectId, setProjectId] = useState<string | null>(() => window.localStorage.getItem(projectKey));
   const [connecting, setConnecting] = useState(false);
   const token = session?.access_token ?? null;
+
+  useEffect(() => {
+    if (window.location.pathname === "/helper") {
+      window.history.replaceState(null, "", "/");
+    }
+  }, []);
 
   useEffect(() => {
     if (!supabase) {
@@ -83,9 +88,6 @@ function AppContent() {
     await supabase?.auth.signOut();
   }
 
-  if (window.location.pathname === "/helper") {
-    return <HelperPage />;
-  }
   if (!ready) {
     return (
       <div className="flex h-full items-center justify-center">

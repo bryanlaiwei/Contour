@@ -222,7 +222,7 @@ export async function pairLocalHelper(code: string, api = apiUrl): Promise<void>
   await helperRequest("/pair", { method: "POST", body: JSON.stringify({ code, apiUrl: api }) }, "The local helper refused the pairing.");
 }
 
-/** Everything the helper page shows, or null when the helper is not running. */
+/** Folders, agent log paths, and status for Settings → Local helper, or null when the helper is not running. */
 export async function readHelperOverview(): Promise<HelperOverview | null> {
   try {
     const response = await fetch(`${helperUrl}/`);
