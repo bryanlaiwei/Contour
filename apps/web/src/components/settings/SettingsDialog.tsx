@@ -1,15 +1,32 @@
-import { Activity, ChevronDown, Copy, KeyRound, Laptop, Settings2, Trash2, UserPlus, Users, X } from "lucide-react";
+import { Activity, ChevronDown, KeyRound, Laptop, Settings2, Trash2, UserPlus, Users, X } from "lucide-react";
 import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from "react";
-import { api, errorMessage, pairLocalHelper, readHelperStatus, type HelperStatus, type ModelProviderId, type ModelSetup, type ProjectSettings, type SupplierModel } from "../../api";
+import {
+  addHelperFolder,
+  api,
+  errorMessage,
+  pairLocalHelper,
+  readHelperOverview,
+  removeHelperFolder,
+  removeHelperPairing,
+  scanHelper,
+  type HelperFolder,
+  type HelperOverview,
+  type HelperProjectStatus,
+  type HelperStatus,
+  type ModelProviderId,
+  type ModelSetup,
+  type ProjectSettings,
+  type SupplierModel,
+} from "../../api";
 import { currentSiteOrigin, offerMacHelperDownload } from "../../mac-helper";
 import { releaseChoosesModelKey, releaseSharesProjects } from "../../release";
-import { formatDateTime, timeAgo } from "../../format";
+import { agentLabel, formatDateTime, timeAgo } from "../../format";
 import { ConfirmDialog } from "../corrections/Dialogs";
 import { GithubMark } from "../GithubMark";
 import { useToast } from "../toast-context";
 import { cx, useNow } from "../helpers";
 import { MacHelperDownload } from "../MacHelperDownload";
-import { Avatar, Button, ErrorNote, Field, IconButton, Spinner, TimeAgo, inputClass } from "../ui";
+import { AgentBadge, Avatar, Button, ErrorNote, Field, IconButton, Spinner, TimeAgo, inputClass } from "../ui";
 
 export type SettingsTab = "general" | "members" | "helper" | "model" | "health";
 
@@ -82,7 +99,7 @@ export function SettingsDialog({
         aria-label="Settings"
         data-settings
         onMouseDown={(event) => event.stopPropagation()}
-        className="animate-in flex h-[min(640px,84vh)] w-full max-w-3xl overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-zinc-200"
+        className="animate-in flex h-[min(760px,88vh)] w-full max-w-3xl overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-zinc-200"
       >
         <nav className="flex w-48 shrink-0 flex-col gap-0.5 border-r border-zinc-100 bg-zinc-50/60 p-3">
           <p className="px-2.5 pt-1 pb-3 text-sm font-semibold text-zinc-900">Settings</p>
@@ -153,7 +170,6 @@ function GeneralTab({ token, settings, onDeleted }: { token: string; settings: P
           </a>
         </Row>
         <Row label="Tracking since">{formatDateTime(settings.project.trackingStartedAt)}</Row>
-        <Row label="Your role">{settings.role === "owner" ? "Owner" : "Member"}</Row>
       </div>
       <p className="text-sm leading-relaxed text-zinc-500">
         Only activity after tracking started is collected: new pull request and Actions updates, and agent sessions created after that time in the folders
@@ -340,18 +356,27 @@ function MembersTab({ token, settings, reload, onLeft }: { token: string; settin
 
 function HelperTab({ token, settings, reload }: { token: string; settings: ProjectSettings; reload: () => Promise<void> }) {
   const toast = useToast();
-  const [status, setStatus] = useState<HelperStatus | null | undefined>(undefined);
+  const [overview, setOverview] = useState<HelperOverview | null | undefined>(undefined);
   const [connecting, setConnecting] = useState(false);
-  const [fallbackCode, setFallbackCode] = useState<string | null>(null);
+  const [scanning, setScanning] = useState(false);
+  const [adding, setAdding] = useState(false);
+  const [removingId, setRemovingId] = useState<string | null>(null);
+  const [disconnecting, setDisconnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const now = useNow(10_000);
+
+  const refresh = useCallback(async () => {
+    const next = await readHelperOverview();
+    setOverview(next);
+    return next;
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
     const check = () =>
-      void readHelperStatus().then((next) => {
+      void readHelperOverview().then((next) => {
         if (!cancelled) {
-          setStatus(next);
+          setOverview(next);
         }
       });
     check();
@@ -362,10 +387,22 @@ function HelperTab({ token, settings, reload }: { token: string; settings: Proje
     };
   }, []);
 
+  async function run(action: () => Promise<void>, success: string, fallback: string): Promise<boolean> {
+    setError(null);
+    try {
+      await action();
+      await refresh();
+      toast(success);
+      return true;
+    } catch (reason) {
+      setError(errorMessage(reason, fallback));
+      return false;
+    }
+  }
+
   async function connect() {
     setConnecting(true);
     setError(null);
-    setFallbackCode(null);
     let code: string;
     try {
       code = (await api.pairingCode(token, settings.project.id)).code;
@@ -376,9 +413,9 @@ function HelperTab({ token, settings, reload }: { token: string; settings: Proje
     }
     try {
       await pairLocalHelper(code);
-      setStatus(await readHelperStatus());
+      await refresh();
       await reload();
-      toast("Helper connected. Choose this project’s folders on the helper page.");
+      toast("Helper connected. Add the folder where you work on this project.");
     } catch (reason) {
       setError(
         reason instanceof TypeError
@@ -387,21 +424,44 @@ function HelperTab({ token, settings, reload }: { token: string; settings: Proje
             : "The helper is not running on this computer. Start it with npm run dev:helper."
           : errorMessage(reason, "Pairing failed."),
       );
-      setFallbackCode(code);
     } finally {
       setConnecting(false);
     }
   }
 
-  const running = status !== null && status !== undefined;
-  const offerDownload = status === null && offerMacHelperDownload(currentSiteOrigin());
-  const here = running ? status.projects.find((entry) => entry.projectId === settings.project.id) : undefined;
-  const others = running ? status.projects.length - (here ? 1 : 0) : 0;
+  async function disconnectHere() {
+    setDisconnecting(true);
+    const ok = await run(() => removeHelperPairing(settings.project.id), "This computer stopped collecting for this project.", "Could not disconnect this computer.");
+    if (ok) {
+      await reload();
+    }
+    setDisconnecting(false);
+  }
+
+  async function addFolder(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const path = String(new FormData(form).get("path") ?? "").trim();
+    setAdding(true);
+    if (await run(() => addHelperFolder(settings.project.id, path), "Folder added.", "Could not add that folder.")) {
+      form.reset();
+    }
+    setAdding(false);
+  }
+
+  const running = overview !== null && overview !== undefined;
+  const offerDownload = overview === null && offerMacHelperDownload(currentSiteOrigin());
+  const status = overview?.status ?? null;
+  const here = status?.projects.find((entry) => entry.projectId === settings.project.id);
+  const others = status ? status.projects.length - (here ? 1 : 0) : 0;
+  const folders = running ? overview.folders.filter((folder) => folder.enabled && folder.projectId === settings.project.id) : [];
   const connected = here !== undefined && !here.needsPairing;
-  const tone = !running ? "bg-zinc-300" : connected && here.selectedFolders > 0 ? "bg-emerald-500" : "bg-amber-400";
+  const folderCount = folders.length;
+  const tone = !running ? "bg-zinc-300" : connected && folderCount > 0 ? "bg-emerald-500" : "bg-amber-400";
 
   return (
     <div className="space-y-7">
+      {error ? <p className="text-sm text-rose-600">{error}</p> : null}
       <div className="rounded-xl p-4 ring-1 ring-zinc-200">
         <div className="flex items-start gap-3">
           <span className={cx("mt-1.5 size-2.5 shrink-0 rounded-full", tone)} />
@@ -411,7 +471,7 @@ function HelperTab({ token, settings, reload }: { token: string; settings: Proje
               <MacHelperDownload />
             ) : (
               <p className="mt-0.5 text-sm text-zinc-500">
-                {status === undefined
+                {overview === undefined
                   ? "Checking for the helper…"
                   : !running
                     ? "The helper is not running. Start it with npm run dev:helper to collect Codex, Claude Code and Cursor sessions."
@@ -419,45 +479,74 @@ function HelperTab({ token, settings, reload }: { token: string; settings: Proje
                       ? `Running, but not connected to this project yet.${others > 0 ? ` It keeps collecting for ${others} other project${others === 1 ? "" : "s"}.` : ""}`
                       : here.needsPairing
                         ? "The server no longer accepts this computer for this project. Reconnect it."
-                        : here.selectedFolders === 0
-                          ? "Connected, but no folders are chosen for this project, so no sessions are collected yet."
-                          : `${here.selectedFolders} folder${here.selectedFolders === 1 ? "" : "s"} selected · last upload ${timeAgo(here.lastUploadAt, now)}${here.queued > 0 ? ` · ${here.queued} waiting` : ""}`}
+                        : folderCount === 0
+                          ? "Connected. Add the folder where you work on this project so sessions are collected."
+                          : `${folderCount} folder${folderCount === 1 ? "" : "s"} selected · last upload ${timeAgo(here.lastUploadAt, now)}${here.queued > 0 ? ` · ${here.queued} waiting` : ""}`}
               </p>
             )}
-            {here?.lastError ? <p className="mt-1 text-xs text-rose-600">{here.lastError}</p> : null}
+            {here?.lastError && !here.needsPairing ? <p className="mt-1 text-xs text-rose-600">{here.lastError}</p> : null}
             <div className="mt-3 flex flex-wrap gap-2">
               <Button size="sm" variant={connected ? "secondary" : "primary"} loading={connecting} onClick={() => void connect()}>
                 {here ? "Reconnect" : "Connect this computer"}
               </Button>
-              {connected ? (
-                <a
-                  href={`/helper?project=${encodeURIComponent(settings.project.id)}`}
-                  className={cx(
-                    "inline-flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-[13px] font-medium",
-                    here.selectedFolders === 0
-                      ? "bg-indigo-600 text-white shadow-sm hover:bg-indigo-500"
-                      : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900",
-                  )}
-                >
-                  Choose folders
-                </a>
+              {here ? (
+                <Button size="sm" variant="ghost" loading={disconnecting} onClick={() => void disconnectHere()}>
+                  Disconnect this computer
+                </Button>
               ) : null}
             </div>
-            {error ? <p className="mt-3 text-sm text-rose-600">{error}</p> : null}
-            {fallbackCode ? (
-              <div className="mt-3 rounded-lg bg-zinc-50 p-3 text-sm text-zinc-600">
-                If the helper runs on another computer, open the helper page there and paste this code:
-                <div className="mt-2 flex items-center gap-2">
-                  <code className="min-w-0 flex-1 truncate rounded-md bg-white px-2 py-1 font-mono text-xs ring-1 ring-zinc-200">{fallbackCode}</code>
-                  <IconButton label="Copy code" onClick={() => void navigator.clipboard.writeText(fallbackCode).then(() => toast("Code copied"))}>
-                    <Copy className="size-4" />
-                  </IconButton>
-                </div>
-              </div>
-            ) : null}
           </div>
         </div>
       </div>
+
+      {connected ? (
+        <div>
+          <h3 className="mb-1 text-xs font-semibold tracking-wide text-zinc-500 uppercase">Folders</h3>
+          <p className="mb-2 text-sm text-zinc-500">Sessions are collected only when their working folder is inside one of these.</p>
+          {folders.length > 0 ? (
+            <ul className="divide-y divide-zinc-100 rounded-xl ring-1 ring-zinc-200">
+              {folders.map((folder) => (
+                <HelperFolderRow
+                  key={folder.id}
+                  folder={folder}
+                  removing={removingId === folder.id}
+                  onRemove={() => {
+                    setRemovingId(folder.id);
+                    return run(() => removeHelperFolder(folder.id), "Folder removed.", "Could not remove that folder.").finally(() => setRemovingId(null));
+                  }}
+                />
+              ))}
+            </ul>
+          ) : null}
+          <form className="mt-3 flex gap-2" onSubmit={(event) => void addFolder(event)}>
+            <input
+              name="path"
+              required
+              spellCheck={false}
+              placeholder="/path/to/your/clone"
+              aria-label="Folder for this project"
+              autoFocus={folderCount === 0}
+              className={cx(inputClass, "font-mono text-xs")}
+            />
+            <Button type="submit" variant={folderCount === 0 ? "primary" : "secondary"} className="shrink-0" loading={adding}>
+              Add folder
+            </Button>
+          </form>
+          {here && here.paused.length > 0 ? <PausedSessions project={here} /> : null}
+        </div>
+      ) : null}
+
+      {running && overview ? (
+        <CollectionSection
+          overview={overview}
+          status={status}
+          scanning={scanning}
+          onScan={() => {
+            setScanning(true);
+            void run(scanHelper, "Scan finished.", "Scan failed.").finally(() => setScanning(false));
+          }}
+        />
+      ) : null}
 
       <div>
         <h3 className="mb-2 text-xs font-semibold tracking-wide text-zinc-500 uppercase">Connected helpers</h3>
@@ -497,6 +586,100 @@ function HelperTab({ token, settings, reload }: { token: string; settings: Proje
           </ul>
         )}
       </div>
+    </div>
+  );
+}
+
+function HelperFolderRow({ folder, removing, onRemove }: { folder: HelperFolder; removing: boolean; onRemove: () => Promise<boolean> }) {
+  return (
+    <li className="flex items-center gap-3 px-3.5 py-2.5">
+      <p className="min-w-0 flex-1 font-mono text-xs break-all text-zinc-700">{folder.canonicalPath}</p>
+      <Button size="sm" variant="ghost" loading={removing} onClick={() => void onRemove()}>
+        Remove
+      </Button>
+    </li>
+  );
+}
+
+function PausedSessions({ project }: { project: HelperProjectStatus }) {
+  return (
+    <div className="mt-4">
+      <p className="text-sm text-zinc-600">Paused sessions. Their log file was replaced or shortened.</p>
+      <ul className="mt-2 space-y-1.5">
+        {project.paused.map((item) => (
+          <li key={`${item.provider}:${item.sessionId}`} className="flex items-center gap-2 text-sm text-zinc-700">
+            <AgentBadge source={item.provider} size={18} />
+            <span className="font-mono text-xs">{item.sessionId}</span>
+            <span className="text-xs text-zinc-500">{item.reason ?? "paused"}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function CollectionSection({
+  overview,
+  status,
+  scanning,
+  onScan,
+}: {
+  overview: HelperOverview;
+  status: HelperStatus | null;
+  scanning: boolean;
+  onScan: () => void;
+}) {
+  const rows: Array<[string, string]> = status
+    ? [
+        ["Last scan", status.lastScanAt ? formatDateTime(status.lastScanAt) : "Not yet"],
+        ["Last upload", status.lastUploadAt ? formatDateTime(status.lastUploadAt) : "Not yet"],
+        ["Waiting to upload", String(status.queued)],
+        ["Uploaded since start", String(status.uploaded)],
+        ["Dropped since start", String(status.dropped)],
+      ]
+    : [];
+  if (status?.nextUploadAt) {
+    rows.push(["Next upload attempt", formatDateTime(status.nextUploadAt)]);
+  }
+
+  return (
+    <div>
+      <div className="mb-2 flex items-start justify-between gap-4">
+        <div>
+          <h3 className="text-xs font-semibold tracking-wide text-zinc-500 uppercase">Agent logs</h3>
+          <p className="mt-1 text-sm text-zinc-500">Directories this computer watches. Counts are for every project on this computer.</p>
+        </div>
+        {status ? (
+          <Button size="sm" loading={scanning} onClick={onScan}>
+            Scan now
+          </Button>
+        ) : null}
+      </div>
+      {overview.logRoots.length === 0 ? (
+        <p className="text-sm text-zinc-500">No agent log directories were found on this computer.</p>
+      ) : (
+        <ul className="space-y-2">
+          {overview.logRoots.map((root) => (
+            <li key={root.id} className="flex items-center gap-2.5">
+              <AgentBadge source={root.id} size={22} />
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-zinc-900">{agentLabel(root.id)}</p>
+                <p className="font-mono text-xs break-all text-zinc-500">{root.path}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+      {rows.length > 0 ? (
+        <dl className="mt-3 divide-y divide-zinc-100 rounded-xl ring-1 ring-zinc-200">
+          {rows.map(([label, value]) => (
+            <div key={label} className="flex items-center justify-between gap-4 px-3.5 py-2.5">
+              <dt className="text-sm text-zinc-500">{label}</dt>
+              <dd className="text-right text-sm text-zinc-900">{value}</dd>
+            </div>
+          ))}
+        </dl>
+      ) : null}
     </div>
   );
 }

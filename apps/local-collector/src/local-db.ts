@@ -40,7 +40,7 @@ export type OutboxEvent = {
 
 export type PairingRecord = {
   projectId: string;
-  /** owner/name, shown on the helper page. Null for pairings saved before names were recorded. */
+  /** owner/name, shown in Settings → Local helper. Null for pairings saved before names were recorded. */
   projectName: string | null;
   trackingStartedAt: string;
   apiUrl: string;
