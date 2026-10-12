@@ -106,8 +106,8 @@ export function Onboarding({
         {releaseSharesProjects && me.invitations.length > 0 ? (
           <section className="mt-8 space-y-2">
             {me.invitations.map((invitation) => (
-              <div key={invitation.id} className="animate-in flex items-center gap-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-indigo-200">
-                <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
+              <div key={invitation.id} className="animate-in flex items-center gap-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-zinc-200">
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-zinc-100 text-zinc-900">
                   <Mail className="size-4.5" />
                 </span>
                 <div className="min-w-0 flex-1">
@@ -140,7 +140,7 @@ export function Onboarding({
                     href={installUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="mt-1 flex w-fit items-center gap-1 font-medium text-indigo-600 hover:text-indigo-500"
+                    className="mt-1 flex w-fit items-center gap-1 font-medium text-zinc-900 underline decoration-zinc-300 underline-offset-[3px] transition-[text-decoration-color] duration-200 ease-smooth hover:decoration-zinc-900"
                   >
                     Install the GitHub App
                     <ExternalLink className="size-3.5" />

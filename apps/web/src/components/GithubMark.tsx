@@ -9,13 +9,7 @@ export function GithubMark({ className }: { className?: string }) {
 export function LogoMark({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 32 32" aria-hidden className={className}>
-      <defs>
-        <linearGradient id="apm-logo" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#6366f1" />
-          <stop offset="1" stopColor="#8b5cf6" />
-        </linearGradient>
-      </defs>
-      <rect width="32" height="32" rx="9" fill="url(#apm-logo)" />
+      <rect width="32" height="32" rx="9" fill="#1d1d1f" />
       <path d="M10 11.5 L21 9.5 M10 11.5 L15.5 21.5 M21 9.5 L22 20" stroke="white" strokeOpacity="0.55" strokeWidth="1.6" strokeLinecap="round" />
       <circle cx="10" cy="11.5" r="3" fill="white" />
       <circle cx="21" cy="9.5" r="2.4" fill="white" />

@@ -296,7 +296,7 @@ export function Workspace({
 
   return (
     <div className="flex h-full flex-col">
-      <header className="z-30 flex h-14 shrink-0 items-center gap-3 border-b border-zinc-200 bg-white/90 px-4 backdrop-blur">
+      <header className="z-30 flex h-14 shrink-0 items-center gap-3 border-b border-zinc-200 bg-white px-4">
         <LogoMark className="size-7" />
         <span className="hidden text-sm font-semibold text-zinc-900 sm:inline">{productName}</span>
         <span className="text-zinc-300">/</span>
@@ -308,7 +308,7 @@ export function Workspace({
               type="button"
               onClick={toggle}
               aria-label="Switch project"
-              className="flex items-center gap-1.5 rounded-lg px-2 py-1 text-sm font-medium text-zinc-800 hover:bg-zinc-100"
+              className="flex items-center gap-1.5 rounded-lg px-2 py-1 text-sm font-medium text-zinc-800 transition-colors duration-200 ease-smooth hover:bg-zinc-100"
             >
               <GithubMark className="size-4 text-zinc-500" />
               {project.owner}/{project.name}
@@ -318,7 +318,7 @@ export function Workspace({
           items={[
             ...projects.map((entry) => ({
               label: `${entry.owner}/${entry.name}`,
-              icon: <Check className={cx("size-4", entry.id === project.id ? "text-indigo-600" : "invisible")} />,
+              icon: <Check className={cx("size-4", entry.id === project.id ? "text-zinc-900" : "invisible")} />,
               onSelect: () => onSwitchProject(entry.id),
             })),
             {
@@ -359,7 +359,7 @@ export function Workspace({
                 <button
                   type="button"
                   onClick={toggle}
-                  className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-medium text-indigo-700 ring-1 ring-indigo-200 hover:bg-indigo-100"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-zinc-100 px-2.5 py-1 text-xs font-medium text-zinc-800 ring-1 ring-zinc-200 transition-colors duration-200 ease-smooth hover:bg-zinc-200"
                 >
                   <Mail className="size-3.5" />
                   {invitations.length} invitation{invitations.length === 1 ? "" : "s"}
@@ -384,7 +384,7 @@ export function Workspace({
                 {me.githubLogin ? (
                   <Avatar login={me.githubLogin} src={me.avatarUrl} size={30} />
                 ) : (
-                  <span className="flex size-[30px] items-center justify-center rounded-full bg-indigo-100 text-xs font-semibold text-indigo-700">
+                  <span className="flex size-[30px] items-center justify-center rounded-full bg-zinc-900 text-xs font-semibold text-white">
                     {(me.name ?? "?").slice(0, 1)}
                   </span>
                 )}

@@ -51,7 +51,7 @@ function ChoiceList<T extends { id: string }>({
           onClick={() => onSelect(item.id)}
           className={cx(
             "flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-sm transition-colors",
-            item.id === selected ? "bg-white text-indigo-900 shadow-sm ring-2 ring-indigo-500" : "text-zinc-700 hover:bg-white",
+            item.id === selected ? "bg-white text-zinc-900 shadow-sm ring-2 ring-zinc-900" : "text-zinc-700 hover:bg-white",
           )}
         >
           {render(item)}
@@ -294,7 +294,7 @@ export function SplitDialog({
                 type="checkbox"
                 checked={artifacts.has(pull.artifactId)}
                 onChange={() => toggle(artifacts, setArtifacts, pull.artifactId)}
-                className="mt-0.5 size-4 accent-indigo-600"
+                className="mt-0.5 size-4 accent-zinc-900"
               />
               <GitPullRequest className="mt-0.5 size-4 shrink-0 text-emerald-600" />
               <span className="min-w-0 text-sm text-zinc-800">
@@ -306,7 +306,7 @@ export function SplitDialog({
             const first = parseExcerpt(item.excerpt)[0];
             return (
               <label key={item.id} className="flex cursor-pointer items-start gap-2.5 rounded-lg px-2.5 py-2 ring-1 ring-zinc-200 hover:bg-zinc-50">
-                <input type="checkbox" checked={evidence.has(item.id)} onChange={() => toggle(evidence, setEvidence, item.id)} className="mt-0.5 size-4 accent-indigo-600" />
+                <input type="checkbox" checked={evidence.has(item.id)} onChange={() => toggle(evidence, setEvidence, item.id)} className="mt-0.5 size-4 accent-zinc-900" />
                 <AgentBadge source={item.source} size={18} />
                 <span className="min-w-0 text-sm">
                   <span className="block text-xs text-zinc-500">{sessionName(item.source, item.sessionId)}</span>

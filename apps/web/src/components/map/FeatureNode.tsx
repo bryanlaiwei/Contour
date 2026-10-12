@@ -30,8 +30,8 @@ function FeatureNodeView({ data }: NodeProps<FeatureFlowNode>) {
   return (
     <div
       className={cx(
-        "group rounded-2xl bg-white text-left shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.04)] ring-1 transition-[box-shadow,ring-color] duration-150",
-        selected ? "ring-2 ring-indigo-500 shadow-lg shadow-indigo-500/10" : "ring-zinc-200 hover:shadow-md hover:ring-zinc-300",
+        "group rounded-2xl bg-white text-left shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_rgba(0,0,0,0.04)] ring-1 transition-[box-shadow,ring-color] duration-200 ease-smooth",
+        selected ? "ring-2 ring-zinc-900 shadow-[0_8px_28px_rgba(0,0,0,0.08)]" : "ring-zinc-200 hover:shadow-[0_8px_24px_rgba(0,0,0,0.06)] hover:ring-zinc-300",
       )}
       style={{ width: cardWidth }}
     >
@@ -52,14 +52,14 @@ function FeatureNodeView({ data }: NodeProps<FeatureFlowNode>) {
             actions.toggle(feature.id);
           }
         }}
-        className="flex cursor-pointer flex-col justify-between rounded-2xl p-4 outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+        className="flex cursor-pointer flex-col justify-between rounded-2xl p-4 outline-none focus-visible:ring-2 focus-visible:ring-zinc-900"
         style={{ height: collapsedHeight }}
       >
         <div className="flex items-start gap-2">
           <h3 className="line-clamp-2 min-w-0 flex-1 text-[15px] leading-snug font-semibold text-zinc-900">{feature.title}</h3>
           <div className="flex shrink-0 items-center gap-1.5 pt-px">
             <ContributorStack contributors={feature.contributors} max={3} size={18} />
-            <ChevronDown className={cx("size-4 text-zinc-400 transition-transform duration-200", expanded && "rotate-180")} aria-hidden />
+            <ChevronDown className={cx("size-4 text-zinc-400 transition-transform duration-300 ease-smooth", expanded && "rotate-180")} aria-hidden />
           </div>
         </div>
         <div>
@@ -93,8 +93,8 @@ function FeatureNodeView({ data }: NodeProps<FeatureFlowNode>) {
               type="button"
               onClick={() => actions.selectWorkItem(item.id)}
               className={cx(
-                "flex w-full items-center gap-2.5 rounded-lg px-2.5 text-left text-[13px] transition-colors",
-                item.id === selectedWorkItemId ? "bg-indigo-50 text-indigo-900 ring-1 ring-indigo-200 ring-inset" : "text-zinc-700 hover:bg-zinc-50",
+                "flex w-full items-center gap-2.5 rounded-lg px-2.5 text-left text-[13px] transition-colors duration-200 ease-smooth",
+                item.id === selectedWorkItemId ? "bg-zinc-100 text-zinc-900 ring-1 ring-zinc-300 ring-inset" : "text-zinc-700 hover:bg-zinc-50",
               )}
               style={{ height: rowHeight }}
             >
@@ -110,7 +110,7 @@ function FeatureNodeView({ data }: NodeProps<FeatureFlowNode>) {
             <button
               type="button"
               onClick={() => actions.selectFeature(feature.id)}
-              className="flex w-full items-center rounded-lg px-2.5 text-left text-xs font-medium text-indigo-600 hover:bg-indigo-50"
+              className="flex w-full items-center rounded-lg px-2.5 text-left text-xs font-medium text-zinc-900 underline decoration-zinc-300 underline-offset-[3px] transition-[text-decoration-color,background-color] duration-200 ease-smooth hover:bg-zinc-50 hover:decoration-zinc-900"
               style={{ height: rowHeight }}
             >
               Show {hidden} more in details

@@ -65,7 +65,7 @@ export function FeaturePanel({
     <div className="space-y-7">
       <div>
         <div className="flex items-start justify-between gap-2">
-          <p className="text-xs font-semibold tracking-wide text-indigo-600 uppercase">Feature</p>
+          <p className="text-xs font-medium tracking-wide text-zinc-500 uppercase">Feature</p>
           <Menu
             trigger={(toggle) => (
               <IconButton label="Feature actions" onClick={toggle} className="-mt-1.5 -mr-1.5">
@@ -116,10 +116,10 @@ export function FeaturePanel({
                 <button
                   type="button"
                   onClick={() => onSelectWorkItem(item.id)}
-                  className="group flex w-full items-start gap-3 rounded-xl px-2 py-2.5 text-left hover:bg-zinc-50"
+                  className="flex w-full items-start gap-3 rounded-xl px-2 py-2.5 text-left transition-colors duration-200 ease-smooth hover:bg-zinc-50"
                 >
                   <div className="min-w-0 flex-1">
-                    <p className="flex items-center gap-1.5 text-sm font-medium text-zinc-900 group-hover:text-indigo-700">
+                    <p className="flex items-center gap-1.5 text-sm font-medium text-zinc-900">
                       <span className="truncate">{item.title}</span>
                       {item.blocked ? <Ban className="size-3.5 shrink-0 text-rose-500" aria-label="Blocked" /> : null}
                     </p>

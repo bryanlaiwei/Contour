@@ -27,9 +27,9 @@ export function Button({ variant = "secondary", size = "md", icon, loading = fal
       {...props}
       disabled={disabled || loading}
       className={cx(
-        "inline-flex items-center justify-center gap-1.5 rounded-lg font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 disabled:cursor-not-allowed disabled:opacity-50",
+        "inline-flex items-center justify-center gap-1.5 rounded-lg font-medium transition-[color,background-color,box-shadow,transform] duration-200 ease-smooth motion-safe:active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-900 disabled:cursor-not-allowed disabled:opacity-50",
         size === "sm" ? "h-8 px-2.5 text-[13px]" : "h-9 px-3.5 text-sm",
-        variant === "primary" && "bg-indigo-600 text-white shadow-sm hover:bg-indigo-500",
+        variant === "primary" && "bg-zinc-900 text-white shadow-sm hover:bg-zinc-800",
         variant === "secondary" && "bg-white text-zinc-800 shadow-sm ring-1 ring-zinc-200 ring-inset hover:bg-zinc-50",
         variant === "ghost" && "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900",
         variant === "danger" && "bg-rose-600 text-white shadow-sm hover:bg-rose-500",
@@ -55,7 +55,7 @@ export function IconButton({
       title={label}
       {...props}
       className={cx(
-        "inline-flex size-8 items-center justify-center rounded-lg text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-900 focus-visible:outline-2 focus-visible:outline-indigo-500 disabled:opacity-40",
+        "inline-flex size-8 items-center justify-center rounded-lg text-zinc-500 transition-[color,background-color,transform] duration-200 ease-smooth motion-safe:active:scale-[0.96] hover:bg-zinc-100 hover:text-zinc-900 focus-visible:outline-2 focus-visible:outline-zinc-900 disabled:opacity-40",
         className,
       )}
     >
@@ -100,7 +100,7 @@ export function Avatar({ login, src, size = 20, className }: { login: string; sr
   if (failed) {
     return (
       <span
-        className={cx("inline-flex shrink-0 items-center justify-center rounded-full bg-indigo-100 font-semibold text-indigo-700 uppercase", className)}
+        className={cx("inline-flex shrink-0 items-center justify-center rounded-full bg-zinc-900 font-semibold text-white uppercase", className)}
         style={{ width: size, height: size, fontSize: size * 0.45 }}
         title={`@${login}`}
       >
@@ -265,7 +265,7 @@ export function Dialog({
     return null;
   }
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-zinc-950/30 p-4 pt-[12vh] backdrop-blur-[2px]" onMouseDown={onClose}>
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/25 p-4 pt-[12vh]" onMouseDown={onClose}>
       <div
         ref={panel}
         role="dialog"
@@ -352,7 +352,7 @@ export function EditableTitle({
           onKeyDown={onKeyDown}
           onBlur={() => void commit()}
           aria-label={label}
-          className={cx("min-w-0 flex-1 rounded-md border border-indigo-300 bg-white px-1.5 py-0.5 outline-none ring-2 ring-indigo-100", className)}
+          className={cx("min-w-0 flex-1 rounded-md border border-zinc-900 bg-white px-1.5 py-0.5 outline-none ring-2 ring-zinc-900/10", className)}
         />
         <IconButton label="Save" onMouseDown={(event) => event.preventDefault()} onClick={() => void commit()}>
           {saving ? <Spinner /> : <Check className="size-4" />}
@@ -444,7 +444,7 @@ export function Menu({
                   item.onSelect();
                 }}
                 className={cx(
-                  "flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm disabled:opacity-40",
+                  "flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm transition-colors duration-200 ease-smooth disabled:opacity-40",
                   item.danger ? "text-rose-600 hover:bg-rose-50" : "text-zinc-700 hover:bg-zinc-100",
                 )}
               >
@@ -472,7 +472,7 @@ export function Field({ label, hint, children }: { label: string; hint?: ReactNo
 }
 
 export const inputClass =
-  "block w-full rounded-lg border-0 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm ring-1 ring-zinc-200 ring-inset placeholder:text-zinc-400 focus:ring-2 focus:ring-indigo-500 focus:outline-none";
+  "block w-full rounded-lg border-0 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm ring-1 ring-zinc-200 ring-inset transition-[box-shadow] duration-200 ease-smooth placeholder:text-zinc-400 focus:ring-2 focus:ring-zinc-900 focus:outline-none";
 
 export function ErrorNote({ children }: { children: ReactNode }) {
   if (!children) {

@@ -3,6 +3,7 @@
 @theme {
   --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, "Helvetica Neue", sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  --ease-smooth: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 html,
@@ -11,19 +12,34 @@ body,
   height: 100%;
 }
 
+html {
+  color-scheme: light;
+  scrollbar-color: #d2d2d7 transparent;
+}
+
 body {
   margin: 0;
-  background: #f7f7f8;
-  color: var(--color-zinc-900);
+  background: #f5f5f7;
+  color: #1d1d1f;
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
+::selection {
+  background: #1d1d1f;
+  color: #fff;
+}
+
+input,
+textarea {
+  caret-color: #1d1d1f;
+}
+
 @keyframes apm-fade-in {
   from {
     opacity: 0;
-    transform: translateY(4px) scale(0.985);
+    transform: translateY(6px);
   }
   to {
     opacity: 1;
@@ -34,7 +50,7 @@ body {
 @keyframes apm-slide-in {
   from {
     opacity: 0;
-    transform: translateX(12px);
+    transform: translateX(20px);
   }
   to {
     opacity: 1;
@@ -43,11 +59,11 @@ body {
 }
 
 .animate-in {
-  animation: apm-fade-in 160ms ease-out;
+  animation: apm-fade-in 280ms var(--ease-smooth) both;
 }
 
 .panel-in {
-  animation: apm-slide-in 180ms ease-out;
+  animation: apm-slide-in 340ms var(--ease-smooth) both;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -67,5 +83,5 @@ body {
 
 .react-flow__attribution {
   background: transparent;
-  color: var(--color-zinc-400);
+  color: #86868b;
 }
