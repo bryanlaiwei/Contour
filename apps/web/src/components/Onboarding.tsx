@@ -2,7 +2,7 @@ import { ArrowLeft, ArrowRight, ExternalLink, LogOut, Mail } from "lucide-react"
 import { useState, type FormEvent } from "react";
 import { api, errorMessage, type Me, type Project } from "../api";
 import { releaseSharesProjects } from "../release";
-import { parseRepository } from "../format";
+import { parseRepository, productName } from "../format";
 import { GithubMark, LogoMark } from "./GithubMark";
 import { cx } from "./helpers";
 import { useToast } from "./toast-context";
@@ -79,7 +79,7 @@ export function Onboarding({
     <div className="min-h-full">
       <header className="flex h-14 items-center gap-3 px-5">
         <LogoMark className="size-7" />
-        <span className="text-sm font-semibold text-zinc-900">Project Map</span>
+        <span className="text-sm font-semibold text-zinc-900">{productName}</span>
         <div className="ml-auto flex items-center gap-2 text-sm text-zinc-500">
           {me.user.githubLogin ? <Avatar login={me.user.githubLogin} src={me.user.avatarUrl} size={26} /> : null}
           <span className="hidden sm:inline">{me.user.githubLogin ? `@${me.user.githubLogin}` : me.user.name}</span>

@@ -19,10 +19,12 @@ export function describeCounts(counts: Partial<Record<WorkItemState, number>>): 
   return parts.length > 0 ? parts.join(" · ") : "No work items yet";
 }
 
-export const agentMeta: Record<string, { label: string; short: string; className: string }> = {
-  codex: { label: "Codex", short: "Cx", className: "bg-zinc-900 text-white" },
-  claude_code: { label: "Claude Code", short: "CC", className: "bg-[#d97757] text-white" },
-  cursor: { label: "Cursor", short: "Cu", className: "bg-zinc-700 text-white" },
+export const productName = "Contour";
+
+export const agentMeta: Record<string, { label: string; short: string }> = {
+  codex: { label: "Codex", short: "Cx" },
+  claude_code: { label: "Claude Code", short: "CC" },
+  cursor: { label: "Cursor", short: "Cu" },
 };
 
 export function agentLabel(source: string): string {

@@ -10,6 +10,7 @@ import {
 import type { Basis, Contributors, WorkItemState } from "../api";
 import { sameGithubLogin } from "../attribution";
 import { agentMeta, basisLabel, stateMeta, timeAgo } from "../format";
+import { AgentMark, agentBadgeClass, isAgentId } from "./AgentMarks";
 import { cx, useNow } from "./helpers";
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
@@ -121,14 +122,30 @@ export function Avatar({ login, src, size = 20, className }: { login: string; sr
 }
 
 export function AgentBadge({ source, size = 20 }: { source: string; size?: number }) {
-  const meta = agentMeta[source] ?? { label: source, short: source.slice(0, 2), className: "bg-zinc-500 text-white" };
+  const meta = agentMeta[source];
+  const label = meta?.label ?? source;
+  if (isAgentId(source)) {
+    return (
+      <span
+        role="img"
+        aria-label={label}
+        title={label}
+        className={cx("inline-flex shrink-0 items-center justify-center overflow-hidden rounded-md ring-2 ring-white", agentBadgeClass(source))}
+        style={{ width: size, height: size }}
+      >
+        <AgentMark source={source} />
+      </span>
+    );
+  }
   return (
     <span
-      className={cx("inline-flex shrink-0 items-center justify-center rounded-md font-semibold ring-1 ring-white", meta.className)}
+      role="img"
+      aria-label={label}
+      title={label}
+      className="inline-flex shrink-0 items-center justify-center rounded-md bg-zinc-500 font-semibold text-white ring-2 ring-white"
       style={{ width: size, height: size, fontSize: size * 0.42 }}
-      title={meta.label}
     >
-      {meta.short}
+      {meta?.short ?? source.slice(0, 2)}
     </span>
   );
 }

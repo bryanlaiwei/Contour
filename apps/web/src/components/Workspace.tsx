@@ -2,7 +2,7 @@ import { Check, ChevronDown, CircleAlert, ExternalLink, LoaderCircle, LogOut, Ma
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ApiError, api, errorMessage, type Graph, type Me, type Project } from "../api";
 import { releaseSharesProjects } from "../release";
-import { timeAgo } from "../format";
+import { productName, timeAgo } from "../format";
 import { EmptyMap } from "./EmptyMap";
 import { GithubMark, LogoMark } from "./GithubMark";
 import { MapCanvas } from "./map/MapCanvas";
@@ -298,7 +298,7 @@ export function Workspace({
     <div className="flex h-full flex-col">
       <header className="z-30 flex h-14 shrink-0 items-center gap-3 border-b border-zinc-200 bg-white/90 px-4 backdrop-blur">
         <LogoMark className="size-7" />
-        <span className="hidden text-sm font-semibold text-zinc-900 sm:inline">Project Map</span>
+        <span className="hidden text-sm font-semibold text-zinc-900 sm:inline">{productName}</span>
         <span className="text-zinc-300">/</span>
         <Menu
           align="left"
