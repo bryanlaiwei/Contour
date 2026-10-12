@@ -15,7 +15,7 @@ import {
   type NodeChange,
   type Viewport,
 } from "@xyflow/react";
-import { LayoutGrid, Maximize, Minus, Plus } from "lucide-react";
+import { ChevronDown, LayoutGrid, Maximize, Minus, Plus } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { Graph, WorkItemState } from "../../api";
 import { stateMeta } from "../../format";
@@ -53,13 +53,13 @@ function DependencyEdgeView({ id, sourceX, sourceY, targetX, targetY, sourcePosi
   );
 }
 
-const legendStates: Record<WorkItemState, true> = {
-  planned: true,
-  in_progress: true,
-  in_review: true,
-  merged: true,
-  closed: true,
-  unknown: true,
+const legendDetail: Record<WorkItemState, string> = {
+  planned: "Asked for in a session, but not started yet.",
+  in_progress: "Work is underway, or only a draft pull request is open.",
+  in_review: "A pull request is open and ready for review.",
+  merged: "A pull request was merged, and none are still open.",
+  closed: "Its pull requests were closed without merging.",
+  unknown: "Not enough activity to tell yet.",
 };
 
 const nodeTypes = { feature: FeatureNode };
@@ -123,6 +123,7 @@ function MapCanvasInner({
   const hadNodes = useRef(graph.features.length > 0);
   const container = useRef<HTMLDivElement>(null);
   const selectedExpanded = selectedFeatureId !== null && expanded.has(selectedFeatureId);
+  const [legendOpen, setLegendOpen] = useState(false);
 
   useEffect(() => {
     if (!selectedFeatureId || !panelOpen) {
@@ -233,16 +234,28 @@ function MapCanvasInner({
         >
           <Background variant={BackgroundVariant.Dots} gap={22} size={1.4} color="#d4d4d8" />
           <Panel position="top-right" style={{ marginTop: 16, marginRight: panelOpen ? 468 : 16 }}>
-            <div className="rounded-xl bg-white/95 px-3 py-2.5 shadow-sm ring-1 ring-zinc-200 backdrop-blur">
-              <p className="mb-1.5 text-[11px] font-semibold tracking-wide text-zinc-500 uppercase">Status</p>
-              <ul className="space-y-1">
-                {(Object.keys(legendStates) as WorkItemState[]).map((state) => (
-                  <li key={state} className="flex items-center gap-2 text-xs text-zinc-700">
-                    <span className={cx("size-2 shrink-0 rounded-full", stateMeta[state].dot)} />
-                    {stateMeta[state].label}
-                  </li>
-                ))}
-              </ul>
+            <div className="w-max max-w-72 rounded-xl bg-white/95 shadow-sm ring-1 ring-zinc-200 backdrop-blur">
+              <button
+                type="button"
+                aria-expanded={legendOpen}
+                onClick={() => setLegendOpen((open) => !open)}
+                className="flex w-full items-center gap-1.5 px-2.5 py-1.5 text-left text-xs font-medium text-zinc-700"
+              >
+                <span>Status</span>
+                <ChevronDown className={cx("size-3.5 text-zinc-400 transition-transform", legendOpen && "rotate-180")} />
+              </button>
+              {legendOpen ? (
+                <ul className="space-y-2 px-2.5 pb-2.5">
+                  {(Object.keys(legendDetail) as WorkItemState[]).map((state) => (
+                    <li key={state} className="flex items-start gap-2 text-xs text-zinc-600">
+                      <span className={cx("mt-1 size-2 shrink-0 rounded-full", stateMeta[state].dot)} />
+                      <span>
+                        <span className="font-medium text-zinc-800">{stateMeta[state].label}.</span> {legendDetail[state]}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
             </div>
           </Panel>
           <Panel position="bottom-left" className="!m-4">

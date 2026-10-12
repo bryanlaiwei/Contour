@@ -17,6 +17,7 @@ import {
 } from "@apm/core/store";
 import { listProjectRoles, projectRole, type Role } from "@apm/core/workspace";
 import { connectProjectResponseSchema, projectListSchema, JSON_BODY_LIMIT_BYTES, SCHEMA_VERSION } from "@apm/shared";
+import { isAllowedWebOrigin } from "./cors.js";
 import { graphRouter } from "./graph/routes.js";
 import { accessFrom, requireAccess } from "./require-access.js";
 import { workspaceRouter } from "./workspace-routes.js";
@@ -96,11 +97,11 @@ export function createApp(deps: AppDeps) {
   }
 
   const app = express();
-  const allowedOrigins = new Set([config().webOrigin, "http://127.0.0.1:5173", "http://localhost:5173"]);
+  const webOrigin = config().webOrigin;
 
   app.use((req, res, next) => {
     const requestOrigin = req.header("origin");
-    if (requestOrigin && allowedOrigins.has(requestOrigin)) {
+    if (requestOrigin && isAllowedWebOrigin(requestOrigin, webOrigin)) {
       res.setHeader("Access-Control-Allow-Origin", requestOrigin);
     }
     res.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type");
