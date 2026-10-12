@@ -477,11 +477,11 @@ function HelperTab({ token, settings, reload }: { token: string; settings: Proje
             </p>
             {here?.lastError && !here.needsPairing ? <p className="mt-1 text-xs text-rose-600">{here.lastError}</p> : null}
             <div className="mt-3 flex flex-wrap gap-2">
-              <Button size="sm" variant={connected ? "secondary" : "primary"} loading={connecting} onClick={() => void connect()}>
+              <Button size="sm" variant={connected ? "secondary" : "primary"} className="shrink-0 whitespace-nowrap" loading={connecting} onClick={() => void connect()}>
                 {here ? "Reconnect" : "Connect this computer"}
               </Button>
               {here ? (
-                <Button size="sm" variant="ghost" loading={disconnecting} onClick={() => void disconnectHere()}>
+                <Button size="sm" variant="ghost" className="shrink-0 whitespace-nowrap" loading={disconnecting} onClick={() => void disconnectHere()}>
                   Disconnect this computer
                 </Button>
               ) : null}
@@ -509,7 +509,7 @@ function HelperTab({ token, settings, reload }: { token: string; settings: Proje
               ))}
             </ul>
           ) : null}
-          <form className="mt-3 flex gap-2" onSubmit={(event) => void addFolder(event)}>
+          <form className="mt-3 flex items-center gap-2" onSubmit={(event) => void addFolder(event)}>
             <input
               name="path"
               required
@@ -517,9 +517,9 @@ function HelperTab({ token, settings, reload }: { token: string; settings: Proje
               placeholder="/path/to/your/clone"
               aria-label="Folder for this project"
               autoFocus={folderCount === 0}
-              className={cx(inputClass, "font-mono text-xs")}
+              className={cx(inputClass, "min-w-0 flex-1 font-mono text-xs")}
             />
-            <Button type="submit" variant={folderCount === 0 ? "primary" : "secondary"} className="shrink-0" loading={adding}>
+            <Button type="submit" variant={folderCount === 0 ? "primary" : "secondary"} className="shrink-0 whitespace-nowrap" loading={adding}>
               Add folder
             </Button>
           </form>
@@ -667,16 +667,18 @@ function CollectionSection({
 
   return (
     <div>
-      <div className="mb-2 flex items-start justify-between gap-4">
-        <div>
+      <div className="mb-3">
+        <div className="flex items-center justify-between gap-3">
           <h3 className="text-xs font-semibold tracking-wide text-zinc-500 uppercase">Agent logs</h3>
-          <p className="mt-1 text-sm text-zinc-500">Where each agent writes its sessions. Each path starts as the default. Counts are for every project on this computer.</p>
+          {status ? (
+            <Button size="sm" className="shrink-0 whitespace-nowrap" loading={scanning} onClick={onScan}>
+              Scan now
+            </Button>
+          ) : null}
         </div>
-        {status ? (
-          <Button size="sm" loading={scanning} onClick={onScan}>
-            Scan now
-          </Button>
-        ) : null}
+        <p className="mt-1.5 text-sm leading-relaxed text-zinc-500">
+          Where each agent writes its sessions. Each path starts as the default. Counts are for every project on this computer.
+        </p>
       </div>
       {overview.logRoots.length === 0 ? (
         <p className="text-sm text-zinc-500">No agent log directories were found on this computer.</p>
@@ -686,36 +688,41 @@ function CollectionSection({
             const value = drafts[root.id] ?? root.path;
             const dirty = value.trim() !== root.path;
             return (
-              <li key={root.id}>
-                <div className="mb-1.5 flex items-center gap-2">
+              <li key={root.id} className="rounded-xl p-3 ring-1 ring-zinc-200">
+                <div className="mb-2 flex items-center gap-2">
                   <AgentBadge source={root.id} size={22} />
                   <p className="text-sm font-medium text-zinc-900">{agentLabel(root.id)}</p>
                   <span className="text-xs text-zinc-400">{root.custom ? "Custom" : "Default"}</span>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex items-center gap-2">
                   <input
                     value={value}
                     spellCheck={false}
                     aria-label={`${agentLabel(root.id)} session folder`}
                     onChange={(event) => setDrafts((current) => ({ ...current, [root.id]: event.target.value }))}
-                    className={cx(inputClass, "font-mono text-xs")}
+                    className={cx(inputClass, "min-w-0 flex-1 font-mono text-xs")}
                   />
                   <Button
                     type="button"
                     variant={dirty ? "primary" : "secondary"}
-                    className="shrink-0"
+                    className="shrink-0 whitespace-nowrap"
                     disabled={!dirty || value.trim() === ""}
                     loading={savingId === root.id}
                     onClick={() => void save(root.id, value.trim())}
                   >
                     Save
                   </Button>
-                  {root.custom ? (
-                    <Button type="button" variant="ghost" className="shrink-0" disabled={savingId === root.id} onClick={() => void reset(root.id)}>
-                      Use default
-                    </Button>
-                  ) : null}
                 </div>
+                {root.custom ? (
+                  <button
+                    type="button"
+                    className="mt-2 text-xs font-medium text-zinc-500 hover:text-zinc-800 disabled:opacity-50"
+                    disabled={savingId === root.id}
+                    onClick={() => void reset(root.id)}
+                  >
+                    Use default
+                  </button>
+                ) : null}
               </li>
             );
           })}
