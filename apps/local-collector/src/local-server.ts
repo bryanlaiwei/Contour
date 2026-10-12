@@ -2,12 +2,13 @@
 // It accepts connections only from this machine. The pages themselves live in the web app.
 
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
-import { realpathSync } from "node:fs";
+import { realpathSync, statSync } from "node:fs";
 import type { AddressInfo } from "node:net";
 import { sep } from "node:path";
 import { agents } from "./agents.js";
 import type { LogRoots } from "./collection-pass.js";
-import type { CollectorStatus } from "./collector-loop.js";
+import { applyLogRootOverrides, type CollectorStatus } from "./collector-loop.js";
+import type { SessionAgentId } from "./contract/adapter.js";
 import type { LogAccess } from "./log-access.js";
 import { LocalDb, type PairingRecord } from "./local-db.js";
 
@@ -19,6 +20,9 @@ export type LocalServerOptions = {
   webOrigin?: string;
   fetchImpl?: typeof fetch;
   logRoots?: LogRoots;
+  /** Defaults before a person chooses a different folder. The effective `logRoots` object is updated in place. */
+  defaultLogRoots?: LogRoots;
+  onLogRootsChanged?: () => void;
   status?: () => CollectorStatus;
   scanNow?: () => Promise<unknown>;
   /** When set, only this website may call the helper. Local development also allows the Vite origin. */
@@ -67,7 +71,7 @@ export async function startLocalServer(options: LocalServerOptions): Promise<Ser
               canonicalPath: folder.canonicalPath,
               enabled: folder.enabled,
             })),
-            logRoots: logRootList(options.logRoots ?? {}),
+            logRoots: logRootList(options),
             logAccess: options.logAccess?.() ?? [],
             status: options.status?.() ?? null,
           },
@@ -192,6 +196,39 @@ export async function startLocalServer(options: LocalServerOptions): Promise<Ser
         send(res, 204, null, req, webOrigin);
         return;
       }
+      if (req.method === "POST" && (url.pathname === "/log-roots" || url.pathname === "/log-roots/reset")) {
+        const body = await readJson(req);
+        const id = typeof body.id === "string" ? body.id : "";
+        if (!isAgentId(id)) {
+          send(res, 400, { error: "Choose Codex, Claude Code, or Cursor." }, req, webOrigin);
+          return;
+        }
+        if (url.pathname === "/log-roots/reset") {
+          options.db.setLogRootOverride(id, null);
+        } else {
+          const folderPath = typeof body.path === "string" ? body.path.trim() : "";
+          if (folderPath === "") {
+            send(res, 400, { error: "A folder path is required." }, req, webOrigin);
+            return;
+          }
+          let canonical: string;
+          try {
+            canonical = realpathSync(folderPath);
+          } catch {
+            send(res, 400, { error: "That folder does not exist." }, req, webOrigin);
+            return;
+          }
+          if (!statSync(canonical).isDirectory()) {
+            send(res, 400, { error: "That path is not a folder." }, req, webOrigin);
+            return;
+          }
+          options.db.setLogRootOverride(id, canonical);
+        }
+        options.onLogRootsChanged?.();
+        void options.scanNow?.();
+        send(res, 200, { logRoots: logRootList(options) }, req, webOrigin);
+        return;
+      }
       if (req.method === "POST" && url.pathname.startsWith("/pairings/") && url.pathname.endsWith("/remove")) {
         const projectId = decodeURIComponent(url.pathname.slice("/pairings/".length, -"/remove".length));
         const removed = options.db.removePairing(projectId);
@@ -260,10 +297,37 @@ function hostAllowed(req: IncomingMessage, port: number): boolean {
   return host === `127.0.0.1:${port}` || host === `localhost:${port}` || host === `[::1]:${port}`;
 }
 
-function logRootList(roots: LogRoots): Array<{ id: string; path: string }> {
+function isAgentId(value: string): value is SessionAgentId {
+  return agents.some((agent) => agent.id === value);
+}
+
+function effectiveLogRoots(options: LocalServerOptions): LogRoots {
+  const defaults = options.defaultLogRoots ?? options.logRoots ?? {};
+  if (!options.defaultLogRoots) {
+    return { ...defaults };
+  }
+  const overrides: LogRoots = {};
+  for (const agent of agents) {
+    const path = options.db.logRootOverride(agent.id);
+    if (path) {
+      overrides[agent.id] = path;
+    }
+  }
+  const effective: LogRoots = {};
+  applyLogRootOverrides(effective, defaults, overrides);
+  return effective;
+}
+
+function logRootList(options: LocalServerOptions): Array<{ id: string; path: string; defaultPath: string; custom: boolean }> {
+  const defaults = options.defaultLogRoots ?? options.logRoots ?? {};
+  const effective = effectiveLogRoots(options);
   return agents.flatMap((agent) => {
-    const path = roots[agent.id];
-    return path ? [{ id: agent.id, path }] : [];
+    const path = effective[agent.id];
+    const defaultPath = defaults[agent.id] ?? path;
+    if (!path || !defaultPath) {
+      return [];
+    }
+    return [{ id: agent.id, path, defaultPath, custom: options.db.logRootOverride(agent.id) !== null }];
   });
 }
 

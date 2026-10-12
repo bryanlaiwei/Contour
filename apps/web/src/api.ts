@@ -194,7 +194,7 @@ export const api = {
 };
 
 export type HelperFolder = { id: string; projectId: string; canonicalPath: string; enabled: boolean };
-export type HelperLogRoot = { id: string; path: string };
+export type HelperLogRoot = { id: string; path: string; defaultPath?: string; custom?: boolean };
 export type HelperPairing = { projectId: string; projectName: string | null; trackingStartedAt: string; apiUrl: string };
 export type HelperOverview = {
   pairings: HelperPairing[];
@@ -246,6 +246,16 @@ export async function removeHelperPairing(projectId: string): Promise<void> {
 
 export async function removeHelperFolder(id: string): Promise<void> {
   await helperRequest(`/folders/${encodeURIComponent(id)}/disable`, { method: "POST", body: "{}" }, "Could not remove that folder.");
+}
+
+/** Points one agent at a different session folder on this computer. */
+export async function setHelperLogRoot(id: string, path: string): Promise<void> {
+  await helperRequest("/log-roots", { method: "POST", body: JSON.stringify({ id, path }) }, "Could not update that folder.");
+}
+
+/** Returns one agent to the session folder it uses by default. */
+export async function resetHelperLogRoot(id: string): Promise<void> {
+  await helperRequest("/log-roots/reset", { method: "POST", body: JSON.stringify({ id }) }, "Could not restore the default folder.");
 }
 
 export async function scanHelper(): Promise<void> {

@@ -8,7 +8,9 @@ import {
   readHelperOverview,
   removeHelperFolder,
   removeHelperPairing,
+  resetHelperLogRoot,
   scanHelper,
+  setHelperLogRoot,
   type HelperFolder,
   type HelperOverview,
   type HelperProjectStatus,
@@ -18,14 +20,12 @@ import {
   type ProjectSettings,
   type SupplierModel,
 } from "../../api";
-import { currentSiteOrigin, offerMacHelperDownload } from "../../mac-helper";
 import { releaseChoosesModelKey, releaseSharesProjects } from "../../release";
 import { agentLabel, formatDateTime, timeAgo } from "../../format";
 import { ConfirmDialog } from "../corrections/Dialogs";
 import { GithubMark } from "../GithubMark";
 import { useToast } from "../toast-context";
 import { cx, useNow } from "../helpers";
-import { MacHelperDownload } from "../MacHelperDownload";
 import { AgentBadge, Avatar, Button, ErrorNote, Field, IconButton, Spinner, TimeAgo, inputClass } from "../ui";
 
 export type SettingsTab = "general" | "members" | "helper" | "model" | "health";
@@ -418,11 +418,7 @@ function HelperTab({ token, settings, reload }: { token: string; settings: Proje
       toast("Helper connected. Add the folder where you work on this project.");
     } catch (reason) {
       setError(
-        reason instanceof TypeError
-          ? offerMacHelperDownload(currentSiteOrigin())
-            ? "The helper is not running on this computer."
-            : "The helper is not running on this computer. Start it with npm run dev:helper."
-          : errorMessage(reason, "Pairing failed."),
+        reason instanceof TypeError ? "The helper is not running on this computer." : errorMessage(reason, "Pairing failed."),
       );
     } finally {
       setConnecting(false);
@@ -450,7 +446,6 @@ function HelperTab({ token, settings, reload }: { token: string; settings: Proje
   }
 
   const running = overview !== null && overview !== undefined;
-  const offerDownload = overview === null && offerMacHelperDownload(currentSiteOrigin());
   const status = overview?.status ?? null;
   const here = status?.projects.find((entry) => entry.projectId === settings.project.id);
   const others = status ? status.projects.length - (here ? 1 : 0) : 0;
@@ -467,14 +462,11 @@ function HelperTab({ token, settings, reload }: { token: string; settings: Proje
           <span className={cx("mt-1.5 size-2.5 shrink-0 rounded-full", tone)} />
           <div className="min-w-0 flex-1">
             <p className="text-sm font-medium text-zinc-900">This computer</p>
-            {offerDownload ? (
-              <MacHelperDownload />
-            ) : (
-              <p className="mt-0.5 text-sm text-zinc-500">
+            <p className="mt-0.5 text-sm text-zinc-500">
                 {overview === undefined
                   ? "Checking for the helper…"
                   : !running
-                    ? "The helper is not running. Start it with npm run dev:helper to collect Codex, Claude Code and Cursor sessions."
+                    ? "The helper is not running on this computer."
                     : !here
                       ? `Running, but not connected to this project yet.${others > 0 ? ` It keeps collecting for ${others} other project${others === 1 ? "" : "s"}.` : ""}`
                       : here.needsPairing
@@ -482,8 +474,7 @@ function HelperTab({ token, settings, reload }: { token: string; settings: Proje
                         : folderCount === 0
                           ? "Connected. Add the folder where you work on this project so sessions are collected."
                           : `${folderCount} folder${folderCount === 1 ? "" : "s"} selected · last upload ${timeAgo(here.lastUploadAt, now)}${here.queued > 0 ? ` · ${here.queued} waiting` : ""}`}
-              </p>
-            )}
+            </p>
             {here?.lastError && !here.needsPairing ? <p className="mt-1 text-xs text-rose-600">{here.lastError}</p> : null}
             <div className="mt-3 flex flex-wrap gap-2">
               <Button size="sm" variant={connected ? "secondary" : "primary"} loading={connecting} onClick={() => void connect()}>
@@ -545,6 +536,8 @@ function HelperTab({ token, settings, reload }: { token: string; settings: Proje
             setScanning(true);
             void run(scanHelper, "Scan finished.", "Scan failed.").finally(() => setScanning(false));
           }}
+          onSetLogRoot={(id, path) => run(() => setHelperLogRoot(id, path), "Session folder updated.", "Could not update that folder.")}
+          onResetLogRoot={(id) => run(() => resetHelperLogRoot(id), "Using the default session folder.", "Could not restore the default folder.")}
         />
       ) : null}
 
@@ -623,12 +616,42 @@ function CollectionSection({
   status,
   scanning,
   onScan,
+  onSetLogRoot,
+  onResetLogRoot,
 }: {
   overview: HelperOverview;
   status: HelperStatus | null;
   scanning: boolean;
   onScan: () => void;
+  onSetLogRoot: (id: string, path: string) => Promise<boolean>;
+  onResetLogRoot: (id: string) => Promise<boolean>;
 }) {
+  const [drafts, setDrafts] = useState<Record<string, string>>({});
+  const [savingId, setSavingId] = useState<string | null>(null);
+
+  async function save(id: string, path: string) {
+    setSavingId(id);
+    if (await onSetLogRoot(id, path)) {
+      setDrafts((current) => {
+        const next = { ...current };
+        delete next[id];
+        return next;
+      });
+    }
+    setSavingId(null);
+  }
+
+  async function reset(id: string) {
+    setSavingId(id);
+    if (await onResetLogRoot(id)) {
+      setDrafts((current) => {
+        const next = { ...current };
+        delete next[id];
+        return next;
+      });
+    }
+    setSavingId(null);
+  }
   const rows: Array<[string, string]> = status
     ? [
         ["Last scan", status.lastScanAt ? formatDateTime(status.lastScanAt) : "Not yet"],
@@ -647,7 +670,7 @@ function CollectionSection({
       <div className="mb-2 flex items-start justify-between gap-4">
         <div>
           <h3 className="text-xs font-semibold tracking-wide text-zinc-500 uppercase">Agent logs</h3>
-          <p className="mt-1 text-sm text-zinc-500">Directories this computer watches. Counts are for every project on this computer.</p>
+          <p className="mt-1 text-sm text-zinc-500">Where each agent writes its sessions. Each path starts as the default. Counts are for every project on this computer.</p>
         </div>
         {status ? (
           <Button size="sm" loading={scanning} onClick={onScan}>
@@ -658,16 +681,44 @@ function CollectionSection({
       {overview.logRoots.length === 0 ? (
         <p className="text-sm text-zinc-500">No agent log directories were found on this computer.</p>
       ) : (
-        <ul className="space-y-2">
-          {overview.logRoots.map((root) => (
-            <li key={root.id} className="flex items-center gap-2.5">
-              <AgentBadge source={root.id} size={22} />
-              <div className="min-w-0">
-                <p className="text-sm font-medium text-zinc-900">{agentLabel(root.id)}</p>
-                <p className="font-mono text-xs break-all text-zinc-500">{root.path}</p>
-              </div>
-            </li>
-          ))}
+        <ul className="space-y-3">
+          {overview.logRoots.map((root) => {
+            const value = drafts[root.id] ?? root.path;
+            const dirty = value.trim() !== root.path;
+            return (
+              <li key={root.id}>
+                <div className="mb-1.5 flex items-center gap-2">
+                  <AgentBadge source={root.id} size={22} />
+                  <p className="text-sm font-medium text-zinc-900">{agentLabel(root.id)}</p>
+                  <span className="text-xs text-zinc-400">{root.custom ? "Custom" : "Default"}</span>
+                </div>
+                <div className="flex gap-2">
+                  <input
+                    value={value}
+                    spellCheck={false}
+                    aria-label={`${agentLabel(root.id)} session folder`}
+                    onChange={(event) => setDrafts((current) => ({ ...current, [root.id]: event.target.value }))}
+                    className={cx(inputClass, "font-mono text-xs")}
+                  />
+                  <Button
+                    type="button"
+                    variant={dirty ? "primary" : "secondary"}
+                    className="shrink-0"
+                    disabled={!dirty || value.trim() === ""}
+                    loading={savingId === root.id}
+                    onClick={() => void save(root.id, value.trim())}
+                  >
+                    Save
+                  </Button>
+                  {root.custom ? (
+                    <Button type="button" variant="ghost" className="shrink-0" disabled={savingId === root.id} onClick={() => void reset(root.id)}>
+                      Use default
+                    </Button>
+                  ) : null}
+                </div>
+              </li>
+            );
+          })}
         </ul>
       )}
       {rows.length > 0 ? (

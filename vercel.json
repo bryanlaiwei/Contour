@@ -3,5 +3,6 @@
   "installCommand": "npm ci",
   "buildCommand": "npm run build --workspace @apm/web",
   "outputDirectory": "apps/web/dist",
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }],
+  "ignoreCommand": "git diff --quiet HEAD^ HEAD -- apps/web packages/shared vercel.json package.json package-lock.json"
 }

@@ -4,7 +4,7 @@ import type { AddressInfo } from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { CollectorLoop } from "../collector-loop.js";
+import { CollectorLoop, applyLogRootOverrides } from "../collector-loop.js";
 import { LocalDb } from "../local-db.js";
 import { startLocalServer } from "../local-server.js";
 
@@ -95,6 +95,40 @@ describe("local helper api", () => {
     expect(status.status.paired).toBe(true);
     helper.server.close();
     helper.db.close();
+  });
+
+  it("replaces one agent session folder and can return to the default", async () => {
+    const root = tempRoot();
+    const custom = join(root, "custom-codex");
+    mkdirSync(custom);
+    const db = new LocalDb(join(root, "collector.sqlite"));
+    const defaults = { codex: join(root, "default-codex") };
+    const logRoots = { ...defaults };
+    const server = await startLocalServer({
+      db,
+      port: 0,
+      webOrigin: "http://127.0.0.1:5173",
+      logRoots,
+      defaultLogRoots: defaults,
+      onLogRootsChanged: () => {
+        const saved = db.logRootOverride("codex");
+        applyLogRootOverrides(logRoots, defaults, saved ? { codex: saved } : {});
+      },
+    });
+    const base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+    const headers = { Origin: "http://127.0.0.1:5173", "Content-Type": "application/json" };
+    const updated = await fetch(`${base}/log-roots`, { method: "POST", headers, body: JSON.stringify({ id: "codex", path: custom }) });
+    expect(updated.status).toBe(200);
+    expect(logRoots.codex).toBe(custom);
+    const listed = (await updated.json()) as { logRoots: Array<{ id: string; path: string; custom: boolean; defaultPath: string }> };
+    expect(listed.logRoots.find((entry) => entry.id === "codex")).toMatchObject({ path: custom, custom: true, defaultPath: defaults.codex });
+    const missing = await fetch(`${base}/log-roots`, { method: "POST", headers, body: JSON.stringify({ id: "codex", path: join(root, "missing") }) });
+    expect(missing.status).toBe(400);
+    const reset = await fetch(`${base}/log-roots/reset`, { method: "POST", headers, body: JSON.stringify({ id: "codex" }) });
+    expect(reset.status).toBe(200);
+    expect(logRoots.codex).toBe(defaults.codex);
+    server.close();
+    db.close();
   });
 
   it("refuses a request that names another host, so a rebound DNS name cannot reach it", async () => {
