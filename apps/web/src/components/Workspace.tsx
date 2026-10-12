@@ -308,7 +308,7 @@ export function Workspace({
               type="button"
               onClick={toggle}
               aria-label="Switch project"
-              className="flex items-center gap-1.5 rounded-lg px-2 py-1 text-sm font-medium text-zinc-800 transition-colors duration-200 ease-smooth hover:bg-zinc-100"
+              className="flex items-center gap-1.5 rounded-lg px-2 py-1 text-sm font-medium text-zinc-800 hover:bg-zinc-100"
             >
               <GithubMark className="size-4 text-zinc-500" />
               {project.owner}/{project.name}
@@ -359,7 +359,7 @@ export function Workspace({
                 <button
                   type="button"
                   onClick={toggle}
-                  className="inline-flex items-center gap-1.5 rounded-full bg-zinc-100 px-2.5 py-1 text-xs font-medium text-zinc-800 ring-1 ring-zinc-200 transition-colors duration-200 ease-smooth hover:bg-zinc-200"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-zinc-100 px-2.5 py-1 text-xs font-medium text-zinc-800 ring-1 ring-zinc-200 hover:bg-zinc-200"
                 >
                   <Mail className="size-3.5" />
                   {invitations.length} invitation{invitations.length === 1 ? "" : "s"}

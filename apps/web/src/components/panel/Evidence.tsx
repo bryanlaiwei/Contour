@@ -19,7 +19,7 @@ function Clamp({ text, lines }: { text: string; lines: number }) {
     <div>
       <p className={cx("text-[13px] leading-relaxed whitespace-pre-wrap text-zinc-700", !open && long && "line-clamp-4")}>{text}</p>
       {long ? (
-        <button type="button" onClick={() => setOpen((value) => !value)} className="mt-1 text-xs font-medium text-zinc-900 underline decoration-zinc-300 underline-offset-[3px] transition-[text-decoration-color] duration-200 ease-smooth hover:decoration-zinc-900">
+        <button type="button" onClick={() => setOpen((value) => !value)} className="mt-1 text-xs font-medium text-zinc-900 hover:text-zinc-600">
           {open ? "Show less" : "Show more"}
         </button>
       ) : null}
@@ -63,7 +63,7 @@ export function EvidenceCard({ evidence }: { evidence: EvidenceDetail }) {
           <Clamp text={evidence.excerpt} lines={6} />
         )}
         {messages.length > shownMessages.length ? (
-          <button type="button" onClick={() => setExpanded(true)} className="text-xs font-medium text-zinc-900 underline decoration-zinc-300 underline-offset-[3px] transition-[text-decoration-color] duration-200 ease-smooth hover:decoration-zinc-900">
+          <button type="button" onClick={() => setExpanded(true)} className="text-xs font-medium text-zinc-900 hover:text-zinc-600">
             Show {messages.length - shownMessages.length} more messages
           </button>
         ) : null}
@@ -87,7 +87,7 @@ export function EvidenceList({ evidence }: { evidence: EvidenceDetail[] }) {
         <EvidenceCard key={item.id} evidence={item} />
       ))}
       {evidence.length > shown.length ? (
-        <button type="button" onClick={() => setShowAll(true)} className="text-xs font-medium text-zinc-900 underline decoration-zinc-300 underline-offset-[3px] transition-[text-decoration-color] duration-200 ease-smooth hover:decoration-zinc-900">
+        <button type="button" onClick={() => setShowAll(true)} className="text-xs font-medium text-zinc-900 hover:text-zinc-600">
           Show {evidence.length - shown.length} more
         </button>
       ) : null}

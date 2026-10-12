@@ -27,10 +27,6 @@ import { cardWidth, collapsedHeight, displayPositions, featureEdges, type XY } f
 
 const panelSpace = 464;
 
-function motionMs(ms: number): number {
-  return window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : ms;
-}
-
 type DependencyEdge = Edge<{ label: string; count: number }, "dependency">;
 
 function DependencyEdgeView({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, data, markerEnd }: EdgeProps<DependencyEdge>) {
@@ -38,16 +34,7 @@ function DependencyEdgeView({ id, sourceX, sourceY, targetX, targetY, sourcePosi
   const [path, labelX, labelY] = getBezierPath({ sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition });
   return (
     <>
-      <BaseEdge
-        id={id}
-        path={path}
-        markerEnd={markerEnd}
-        style={{
-          stroke: hovered ? "#1d1d1f" : "#c7c7cc",
-          strokeWidth: hovered ? 2 : 1.5,
-          transition: "stroke 200ms cubic-bezier(0.22, 1, 0.36, 1), stroke-width 200ms cubic-bezier(0.22, 1, 0.36, 1)",
-        }}
-      />
+      <BaseEdge id={id} path={path} markerEnd={markerEnd} style={{ stroke: hovered ? "#1d1d1f" : "#c7c7cc", strokeWidth: hovered ? 2 : 1.5 }} />
       <path d={path} fill="none" stroke="transparent" strokeWidth={18} onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} />
       {data && (hovered || data.count > 1) ? (
         <EdgeLabelRenderer>
@@ -217,7 +204,7 @@ function MapCanvasInner({
   useEffect(() => {
     if (!hadNodes.current && nodes.length > 0) {
       hadNodes.current = true;
-      window.requestAnimationFrame(() => void flow.fitView({ padding: 0.25, maxZoom: 1, duration: motionMs(420) }));
+      window.requestAnimationFrame(() => void flow.fitView({ padding: 0.25, maxZoom: 1, duration: 300 }));
     }
   }, [nodes.length, flow]);
 
@@ -246,7 +233,7 @@ function MapCanvasInner({
           className="bg-[#f5f5f7]"
         >
           <Background variant={BackgroundVariant.Dots} gap={24} size={1.15} color="#e4e4e7" />
-          <Panel position="top-right" className="transition-[margin] duration-300 ease-smooth" style={{ marginTop: 16, marginRight: panelOpen ? 468 : 16 }}>
+          <Panel position="top-right" style={{ marginTop: 16, marginRight: panelOpen ? 468 : 16 }}>
             <div className="w-max max-w-72 rounded-xl bg-white shadow-sm ring-1 ring-zinc-200">
               <button
                 type="button"
@@ -255,7 +242,7 @@ function MapCanvasInner({
                 className="flex w-full items-center gap-1.5 px-2.5 py-1.5 text-left text-xs font-medium text-zinc-700"
               >
                 <span>Status</span>
-                <ChevronDown className={cx("size-3.5 text-zinc-400 transition-transform duration-300 ease-smooth", legendOpen && "rotate-180")} />
+                <ChevronDown className={cx("size-3.5 text-zinc-400 transition-transform", legendOpen && "rotate-180")} />
               </button>
               {legendOpen ? (
                 <ul className="space-y-2 px-2.5 pb-2.5">
@@ -273,19 +260,19 @@ function MapCanvasInner({
           </Panel>
           <Panel position="bottom-left" className="!m-4">
             <div className="flex items-center gap-0.5 rounded-xl bg-white p-1 shadow-sm ring-1 ring-zinc-200">
-              <IconButton label="Zoom in" onClick={() => void flow.zoomIn({ duration: motionMs(280) })}>
+              <IconButton label="Zoom in" onClick={() => void flow.zoomIn({ duration: 150 })}>
                 <Plus className="size-4" />
               </IconButton>
-              <IconButton label="Zoom out" onClick={() => void flow.zoomOut({ duration: motionMs(280) })}>
+              <IconButton label="Zoom out" onClick={() => void flow.zoomOut({ duration: 150 })}>
                 <Minus className="size-4" />
               </IconButton>
-              <IconButton label="Fit map to screen" onClick={() => void flow.fitView({ padding: 0.25, maxZoom: 1, duration: motionMs(420) })}>
+              <IconButton label="Fit map to screen" onClick={() => void flow.fitView({ padding: 0.25, maxZoom: 1, duration: 300 })}>
                 <Maximize className="size-4" />
               </IconButton>
               <span className="mx-0.5 h-5 w-px bg-zinc-200" />
               <IconButton
                 label="Tidy up layout"
-                onClick={() => void onTidy().then(() => window.setTimeout(() => void flow.fitView({ padding: 0.25, maxZoom: 1, duration: motionMs(420) }), 50))}
+                onClick={() => void onTidy().then(() => window.setTimeout(() => void flow.fitView({ padding: 0.25, maxZoom: 1, duration: 300 }), 50))}
                 disabled={graph.features.length < 2}
               >
                 <LayoutGrid className="size-4" />

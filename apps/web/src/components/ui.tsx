@@ -27,7 +27,7 @@ export function Button({ variant = "secondary", size = "md", icon, loading = fal
       {...props}
       disabled={disabled || loading}
       className={cx(
-        "inline-flex items-center justify-center gap-1.5 rounded-lg font-medium transition-[color,background-color,box-shadow,transform] duration-200 ease-smooth motion-safe:active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-900 disabled:cursor-not-allowed disabled:opacity-50",
+        "inline-flex items-center justify-center gap-1.5 rounded-lg font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-900 disabled:cursor-not-allowed disabled:opacity-50",
         size === "sm" ? "h-8 px-2.5 text-[13px]" : "h-9 px-3.5 text-sm",
         variant === "primary" && "bg-zinc-900 text-white shadow-sm hover:bg-zinc-800",
         variant === "secondary" && "bg-white text-zinc-800 shadow-sm ring-1 ring-zinc-200 ring-inset hover:bg-zinc-50",
@@ -55,7 +55,7 @@ export function IconButton({
       title={label}
       {...props}
       className={cx(
-        "inline-flex size-8 items-center justify-center rounded-lg text-zinc-500 transition-[color,background-color,transform] duration-200 ease-smooth motion-safe:active:scale-[0.96] hover:bg-zinc-100 hover:text-zinc-900 focus-visible:outline-2 focus-visible:outline-zinc-900 disabled:opacity-40",
+        "inline-flex size-8 items-center justify-center rounded-lg text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-900 focus-visible:outline-2 focus-visible:outline-zinc-900 disabled:opacity-40",
         className,
       )}
     >
@@ -444,7 +444,7 @@ export function Menu({
                   item.onSelect();
                 }}
                 className={cx(
-                  "flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm transition-colors duration-200 ease-smooth disabled:opacity-40",
+                  "flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm disabled:opacity-40",
                   item.danger ? "text-rose-600 hover:bg-rose-50" : "text-zinc-700 hover:bg-zinc-100",
                 )}
               >
@@ -472,7 +472,7 @@ export function Field({ label, hint, children }: { label: string; hint?: ReactNo
 }
 
 export const inputClass =
-  "block w-full rounded-lg border-0 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm ring-1 ring-zinc-200 ring-inset transition-[box-shadow] duration-200 ease-smooth placeholder:text-zinc-400 focus:ring-2 focus:ring-zinc-900 focus:outline-none";
+  "block w-full rounded-lg border-0 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm ring-1 ring-zinc-200 ring-inset placeholder:text-zinc-400 focus:ring-2 focus:ring-zinc-900 focus:outline-none";
 
 export function ErrorNote({ children }: { children: ReactNode }) {
   if (!children) {

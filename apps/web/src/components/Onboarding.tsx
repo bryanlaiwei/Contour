@@ -140,7 +140,7 @@ export function Onboarding({
                     href={installUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="mt-1 flex w-fit items-center gap-1 font-medium text-zinc-900 underline decoration-zinc-300 underline-offset-[3px] transition-[text-decoration-color] duration-200 ease-smooth hover:decoration-zinc-900"
+                    className="mt-1 flex w-fit items-center gap-1 font-medium text-zinc-900 hover:text-zinc-600"
                   >
                     Install the GitHub App
                     <ExternalLink className="size-3.5" />

@@ -6,7 +6,7 @@ export const stateMeta: Record<WorkItemState, { label: string; dot: string; bar:
   planned: { label: "Planned", dot: "bg-slate-400", bar: "bg-slate-300", chip: "bg-slate-100 text-slate-700 ring-slate-200" },
   in_progress: { label: "In progress", dot: "bg-sky-500", bar: "bg-sky-500", chip: "bg-sky-50 text-sky-700 ring-sky-200" },
   in_review: { label: "In review", dot: "bg-amber-500", bar: "bg-amber-400", chip: "bg-amber-50 text-amber-800 ring-amber-200" },
-  merged: { label: "Merged", dot: "bg-zinc-900", bar: "bg-zinc-800", chip: "bg-zinc-100 text-zinc-800 ring-zinc-200" },
+  merged: { label: "Merged", dot: "bg-emerald-500", bar: "bg-emerald-500", chip: "bg-emerald-50 text-emerald-800 ring-emerald-200" },
   closed: { label: "Closed", dot: "bg-rose-400", bar: "bg-rose-300", chip: "bg-rose-50 text-rose-700 ring-rose-200" },
   unknown: { label: "Unknown", dot: "bg-zinc-300", bar: "bg-zinc-200", chip: "bg-zinc-100 text-zinc-600 ring-zinc-200" },
 };

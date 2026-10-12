@@ -102,7 +102,7 @@ export function WorkItemPanel({
           <button
             type="button"
             onClick={() => onSelectFeature(item.feature.id)}
-            className="-ml-1 flex min-w-0 items-center gap-1 rounded-md px-1 text-xs font-medium tracking-wide text-zinc-500 uppercase transition-colors duration-200 ease-smooth hover:bg-zinc-100 hover:text-zinc-900"
+            className="-ml-1 flex min-w-0 items-center gap-1 rounded-md px-1 text-xs font-semibold tracking-wide text-zinc-600 uppercase hover:bg-zinc-100"
           >
             <span className="truncate">{item.feature.title}</span>
           </button>
@@ -177,7 +177,7 @@ export function WorkItemPanel({
                 <button
                   type="button"
                   onClick={() => onSelectWorkItem(relationship.workItemId)}
-                  className="min-w-0 flex-1 truncate text-left text-sm font-medium text-zinc-800 underline decoration-transparent underline-offset-[3px] transition-[text-decoration-color] duration-200 ease-smooth hover:decoration-zinc-900"
+                  className="min-w-0 flex-1 truncate text-left text-sm font-medium text-zinc-800 hover:text-zinc-950"
                 >
                   {relationship.title}
                 </button>

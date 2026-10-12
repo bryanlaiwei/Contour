@@ -149,7 +149,7 @@ export function History({ entries, featureTitle }: { entries: HistoryEntry[]; fe
         ))}
       </ol>
       {entries.length > shown.length ? (
-        <button type="button" onClick={() => setShowAll(true)} className="mt-3 text-xs font-medium text-zinc-900 underline decoration-zinc-300 underline-offset-[3px] transition-[text-decoration-color] duration-200 ease-smooth hover:decoration-zinc-900">
+        <button type="button" onClick={() => setShowAll(true)} className="mt-3 text-xs font-medium text-zinc-900 hover:text-zinc-600">
           Show {entries.length - shown.length} older changes
         </button>
       ) : null}
