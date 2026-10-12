@@ -8,6 +8,8 @@ describe("web origin allow list", () => {
     expect(isAllowedWebOrigin(staging, staging)).toBe(true);
     expect(isAllowedWebOrigin("http://127.0.0.1:5173", staging)).toBe(true);
     expect(isAllowedWebOrigin("http://localhost:5173", staging)).toBe(true);
+    expect(isAllowedWebOrigin("http://127.0.0.1:5175", staging)).toBe(true);
+    expect(isAllowedWebOrigin("http://localhost:5175", staging)).toBe(true);
   });
 
   it("allows this project's Vercel preview hosts", () => {

@@ -344,7 +344,15 @@ function originAllowed(req: IncomingMessage, webOrigin: string, port: number, st
   if (strictWebOrigin) {
     return origin === webOrigin;
   }
-  const self = new Set([`http://127.0.0.1:${port}`, `http://localhost:${port}`, webOrigin, "http://localhost:5173"]);
+  const self = new Set([
+    `http://127.0.0.1:${port}`,
+    `http://localhost:${port}`,
+    webOrigin,
+    "http://127.0.0.1:5173",
+    "http://localhost:5173",
+    "http://127.0.0.1:5175",
+    "http://localhost:5175",
+  ]);
   return self.has(origin);
 }
 

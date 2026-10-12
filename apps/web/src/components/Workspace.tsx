@@ -296,10 +296,11 @@ export function Workspace({
 
   return (
     <div className="flex h-full flex-col">
-      <header className="z-30 flex h-14 shrink-0 items-center gap-3 border-b border-zinc-200 bg-white px-4">
-        <LogoMark className="size-7" />
-        <span className="hidden text-sm font-semibold text-zinc-900 sm:inline">{productName}</span>
-        <span className="text-zinc-300">/</span>
+      <header className="z-30 flex h-14 shrink-0 items-center gap-2 border-b border-zinc-200 bg-white px-3 sm:gap-3 sm:px-4">
+        <LogoMark className="size-7 shrink-0" />
+        <span className="hidden shrink-0 text-sm font-semibold text-zinc-900 sm:inline">{productName}</span>
+        <span className="shrink-0 text-zinc-300">/</span>
+        <div className="min-w-0 shrink">
         <Menu
           align="left"
           wide
@@ -308,11 +309,13 @@ export function Workspace({
               type="button"
               onClick={toggle}
               aria-label="Switch project"
-              className="flex items-center gap-1.5 rounded-lg px-2 py-1 text-sm font-medium text-zinc-800 hover:bg-zinc-100"
+              className="flex w-full min-w-0 items-center gap-1.5 rounded-lg px-2 py-1 text-sm font-medium text-zinc-800 hover:bg-zinc-100"
             >
-              <GithubMark className="size-4 text-zinc-500" />
-              {project.owner}/{project.name}
-              <ChevronDown className="size-3.5 text-zinc-400" />
+              <GithubMark className="size-4 shrink-0 text-zinc-500" />
+              <span className="truncate">
+                {project.owner}/{project.name}
+              </span>
+              <ChevronDown className="size-3.5 shrink-0 text-zinc-400" />
             </button>
           )}
           items={[
@@ -330,27 +333,34 @@ export function Workspace({
             { label: "New project", icon: <Plus className="size-4 text-zinc-500" />, onSelect: onConnectRepository },
           ]}
         />
+        </div>
 
-        <div className="ml-auto flex items-center gap-2">
+        <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">
           {offline ? (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-50 px-2.5 py-1 text-xs font-medium text-rose-700 ring-1 ring-rose-200">
-              <WifiOff className="size-3.5" />
-              Can’t reach the server. Retrying…
+            <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-rose-50 px-2 py-1 text-xs font-medium text-rose-700 ring-1 ring-rose-200 sm:px-2.5" title="Can’t reach the server. Retrying…">
+              <WifiOff className="size-3.5 shrink-0" />
+              <span className="hidden sm:inline">Can’t reach the server. Retrying…</span>
             </span>
           ) : graph && graph.pendingAnalysis > 0 ? (
             <button
               type="button"
               onClick={() => setSettingsTab("health")}
               className={cx(
-                "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ring-1",
+                "inline-flex shrink-0 items-center gap-1.5 rounded-full px-2 py-1 text-xs font-medium ring-1 sm:px-2.5",
                 pendingAge > delayedAfterMs ? "bg-amber-50 text-amber-800 ring-amber-200" : "bg-zinc-50 text-zinc-600 ring-zinc-200",
               )}
-              title={graph.pendingSince ? `Waiting since ${timeAgo(graph.pendingSince, now)}` : undefined}
+              title={
+                pendingAge > delayedAfterMs
+                  ? `Analysis delayed. ${graph.pendingAnalysis} update${graph.pendingAnalysis === 1 ? "" : "s"} waiting`
+                  : `Analyzing ${graph.pendingAnalysis} update${graph.pendingAnalysis === 1 ? "" : "s"}`
+              }
             >
-              {pendingAge > delayedAfterMs ? <CircleAlert className="size-3.5" /> : <LoaderCircle className="size-3.5 animate-spin" />}
-              {pendingAge > delayedAfterMs
-                ? `Analysis delayed · ${graph.pendingAnalysis} update${graph.pendingAnalysis === 1 ? "" : "s"} waiting`
-                : `Analyzing ${graph.pendingAnalysis} update${graph.pendingAnalysis === 1 ? "" : "s"}`}
+              {pendingAge > delayedAfterMs ? <CircleAlert className="size-3.5 shrink-0" /> : <LoaderCircle className="size-3.5 shrink-0 animate-spin" />}
+              <span className="hidden sm:inline">
+                {pendingAge > delayedAfterMs
+                  ? `Analysis delayed · ${graph.pendingAnalysis} update${graph.pendingAnalysis === 1 ? "" : "s"} waiting`
+                  : `Analyzing ${graph.pendingAnalysis} update${graph.pendingAnalysis === 1 ? "" : "s"}`}
+              </span>
             </button>
           ) : null}
           {releaseSharesProjects && invitations.length > 0 ? (
@@ -359,9 +369,9 @@ export function Workspace({
                 <button
                   type="button"
                   onClick={toggle}
-                  className="inline-flex items-center gap-1.5 rounded-full bg-zinc-100 px-2.5 py-1 text-xs font-medium text-zinc-800 ring-1 ring-zinc-200 hover:bg-zinc-200"
+                  className="inline-flex min-w-0 items-center gap-1.5 rounded-full bg-zinc-100 px-2.5 py-1 text-xs font-medium text-zinc-800 ring-1 ring-zinc-200 hover:bg-zinc-200"
                 >
-                  <Mail className="size-3.5" />
+                  <Mail className="size-3.5 shrink-0" />
                   {invitations.length} invitation{invitations.length === 1 ? "" : "s"}
                 </button>
               )}
@@ -375,7 +385,7 @@ export function Workspace({
               }))}
             />
           ) : null}
-          <Button variant="ghost" size="sm" icon={<Settings className="size-4" />} onClick={() => setSettingsTab("general")}>
+          <Button variant="ghost" size="sm" className="shrink-0" icon={<Settings className="size-4" />} onClick={() => setSettingsTab("general")}>
             <span className="hidden sm:inline">Settings</span>
           </Button>
           <Menu

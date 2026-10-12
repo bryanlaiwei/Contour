@@ -1,4 +1,9 @@
-const localDevOrigins = new Set(["http://127.0.0.1:5173", "http://localhost:5173"]);
+const localDevOrigins = new Set([
+  "http://127.0.0.1:5173",
+  "http://localhost:5173",
+  "http://127.0.0.1:5175",
+  "http://localhost:5175",
+]);
 
 /** Preview hosts for this Vercel team. Branch aliases are truncated, so match the project prefix plus this suffix. */
 const vercelPreviewHostSuffix = "-bwei2398-5560s-projects.vercel.app";
