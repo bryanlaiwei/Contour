@@ -18,7 +18,7 @@ import { Avatar } from "../ui";
 
 function pullState(pull: PullRequestDetail): { label: string; icon: ReactNode; className: string } {
   if (pull.merged) {
-    return { label: "Merged", icon: <GitMerge className="size-4" />, className: "text-violet-600 bg-violet-50" };
+    return { label: "Merged", icon: <GitMerge className="size-4" />, className: "text-emerald-700 bg-emerald-50" };
   }
   if (pull.state === "closed") {
     return { label: "Closed", icon: <GitPullRequestClosed className="size-4" />, className: "text-rose-600 bg-rose-50" };
@@ -114,8 +114,8 @@ export function PullRequestCard({ pull, viewerLogin }: { pull: PullRequestDetail
           {state.icon}
         </span>
         <div className="min-w-0 flex-1">
-          <a href={pull.url} target="_blank" rel="noreferrer" className="group block text-sm leading-snug font-medium text-zinc-900 hover:text-indigo-600">
-            {pull.title} <span className="font-normal text-zinc-400 group-hover:text-indigo-400">#{pull.number}</span>
+          <a href={pull.url} target="_blank" rel="noreferrer" className="block text-sm leading-snug font-medium text-zinc-900 hover:text-zinc-600">
+            {pull.title} <span className="font-normal text-zinc-400">#{pull.number}</span>
           </a>
           <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-zinc-500">
             <span className="font-medium">{state.label}</span>

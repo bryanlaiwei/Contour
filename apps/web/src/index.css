@@ -11,13 +11,28 @@ body,
   height: 100%;
 }
 
+html {
+  color-scheme: light;
+  scrollbar-color: #d2d2d7 transparent;
+}
+
 body {
   margin: 0;
-  background: #f7f7f8;
-  color: var(--color-zinc-900);
+  background: #f5f5f7;
+  color: #1d1d1f;
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background: #1d1d1f;
+  color: #fff;
+}
+
+input,
+textarea {
+  caret-color: #1d1d1f;
 }
 
 @keyframes apm-fade-in {
@@ -67,5 +82,5 @@ body {
 
 .react-flow__attribution {
   background: transparent;
-  color: var(--color-zinc-400);
+  color: #86868b;
 }

@@ -92,7 +92,7 @@ export function SettingsDialog({
   }, [onClose]);
 
   return (
-    <div className="fixed inset-0 z-40 flex items-start justify-center overflow-y-auto bg-zinc-950/30 p-4 pt-[8vh] backdrop-blur-[2px]" onMouseDown={onClose}>
+    <div className="fixed inset-0 z-40 flex items-start justify-center overflow-y-auto bg-black/25 p-4 pt-[8vh]" onMouseDown={onClose}>
       <div
         role="dialog"
         aria-modal="true"
@@ -164,7 +164,7 @@ function GeneralTab({ token, settings, onDeleted }: { token: string; settings: P
     <div className="space-y-8">
       <div>
         <Row label="Repository">
-          <a href={`https://github.com/${repo}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 font-medium hover:text-indigo-600">
+          <a href={`https://github.com/${repo}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 font-medium hover:text-zinc-600">
             <GithubMark className="size-4" />
             {repo}
           </a>
@@ -277,7 +277,7 @@ function MembersTab({ token, settings, reload, onLeft }: { token: string; settin
               <span
                 className={cx(
                   "rounded-full px-2 py-0.5 text-xs font-medium",
-                  member.role === "owner" ? "bg-indigo-50 text-indigo-700" : "bg-zinc-100 text-zinc-600",
+                  member.role === "owner" ? "bg-zinc-900 text-white" : "bg-zinc-100 text-zinc-600",
                 )}
               >
                 {member.role === "owner" ? "Owner" : "Member"}

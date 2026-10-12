@@ -34,14 +34,14 @@ function DependencyEdgeView({ id, sourceX, sourceY, targetX, targetY, sourcePosi
   const [path, labelX, labelY] = getBezierPath({ sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition });
   return (
     <>
-      <BaseEdge id={id} path={path} markerEnd={markerEnd} style={{ stroke: hovered ? "#6366f1" : "#a1a1aa", strokeWidth: hovered ? 2 : 1.5 }} />
+      <BaseEdge id={id} path={path} markerEnd={markerEnd} style={{ stroke: hovered ? "#1d1d1f" : "#c7c7cc", strokeWidth: hovered ? 2 : 1.5 }} />
       <path d={path} fill="none" stroke="transparent" strokeWidth={18} onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} />
       {data && (hovered || data.count > 1) ? (
         <EdgeLabelRenderer>
           <div
             className={cx(
               "pointer-events-none absolute rounded-full px-2 py-0.5 text-[11px] font-medium shadow-sm ring-1",
-              hovered ? "bg-indigo-600 text-white ring-indigo-600" : "bg-white text-zinc-600 ring-zinc-200",
+              hovered ? "bg-zinc-900 text-white ring-zinc-900" : "bg-white text-zinc-600 ring-zinc-200",
             )}
             style={{ transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)` }}
           >
@@ -196,7 +196,7 @@ function MapCanvasInner({
         target: edge.target,
         type: "dependency",
         data: { label: edge.label, count: edge.count },
-        markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16, color: "#a1a1aa" },
+        markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16, color: "#c7c7cc" },
       })),
     [graph.features, graph.relationships],
   );
@@ -230,11 +230,11 @@ function MapCanvasInner({
           maxZoom={1.75}
           {...(initialViewport ? { defaultViewport: initialViewport } : { fitView: true, fitViewOptions: { padding: 0.25, maxZoom: 1 } })}
           proOptions={{ hideAttribution: false }}
-          className="bg-[#f7f7f8]"
+          className="bg-[#f5f5f7]"
         >
-          <Background variant={BackgroundVariant.Dots} gap={22} size={1.4} color="#d4d4d8" />
+          <Background variant={BackgroundVariant.Dots} gap={24} size={1.15} color="#e4e4e7" />
           <Panel position="top-right" style={{ marginTop: 16, marginRight: panelOpen ? 468 : 16 }}>
-            <div className="w-max max-w-72 rounded-xl bg-white/95 shadow-sm ring-1 ring-zinc-200 backdrop-blur">
+            <div className="w-max max-w-72 rounded-xl bg-white shadow-sm ring-1 ring-zinc-200">
               <button
                 type="button"
                 aria-expanded={legendOpen}

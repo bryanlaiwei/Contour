@@ -124,8 +124,8 @@ function who(entry: HistoryEntry): string {
 }
 
 const dotClass: Record<HistoryEntry["basis"], string> = {
-  human: "bg-indigo-500",
-  inferred: "bg-fuchsia-400",
+  human: "bg-zinc-900",
+  inferred: "bg-amber-500",
   observed: "bg-zinc-400",
 };
 
@@ -149,7 +149,7 @@ export function History({ entries, featureTitle }: { entries: HistoryEntry[]; fe
         ))}
       </ol>
       {entries.length > shown.length ? (
-        <button type="button" onClick={() => setShowAll(true)} className="mt-3 text-xs font-medium text-indigo-600 hover:text-indigo-500">
+        <button type="button" onClick={() => setShowAll(true)} className="mt-3 text-xs font-medium text-zinc-900 hover:text-zinc-600">
           Show {entries.length - shown.length} older changes
         </button>
       ) : null}

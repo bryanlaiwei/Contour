@@ -37,8 +37,8 @@ export function EmptyMap({
   canInvite: boolean;
 }) {
   return (
-    <div className="animate-in w-[min(440px,calc(100vw-48px))] rounded-2xl bg-white/95 p-6 shadow-xl ring-1 shadow-zinc-900/5 ring-zinc-200 backdrop-blur">
-      <div className="flex size-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
+    <div className="animate-in w-[min(440px,calc(100vw-48px))] rounded-2xl bg-white p-6 shadow-xl ring-1 shadow-zinc-900/5 ring-zinc-200">
+      <div className="flex size-10 items-center justify-center rounded-xl bg-zinc-100 text-zinc-900">
         <Sparkles className="size-5" />
       </div>
       <h2 className="mt-4 text-lg font-semibold text-zinc-900">Connected.</h2>
