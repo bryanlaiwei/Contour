@@ -39,6 +39,8 @@ describe("local helper api", () => {
         scans += 1;
         return loop.tick();
       },
+      pause: () => loop.pause(),
+      resume: () => loop.resume(),
       fetchImpl: async () =>
         new Response(JSON.stringify({ token: "apm_device", deviceId: "device-web", projectId, trackingStartedAt }), {
           status: 201,
@@ -46,7 +48,7 @@ describe("local helper api", () => {
         }),
     });
     const port = (server.address() as AddressInfo).port;
-    return { db, server, base: `http://127.0.0.1:${port}`, port, scans: () => scans };
+    return { db, server, loop, base: `http://127.0.0.1:${port}`, port, scans: () => scans };
   }
 
   it("pairs from the web app, then lets a person on this computer choose folders", async () => {
@@ -109,6 +111,27 @@ describe("local helper api", () => {
     helper.server.close();
     helper.db.close();
   });
+
+  it("lets the menu bar pause collection and refuses the same call from a website", async () => {
+    const helper = await startHelper(tempRoot());
+    try {
+      const paused = await fetch(`${helper.base}/control/pause`, { method: "POST" });
+      expect(paused.status).toBe(200);
+      expect(((await paused.json()) as { status: { collecting: boolean } }).status.collecting).toBe(false);
+      const fromSite = await fetch(`${helper.base}/control/resume`, {
+        method: "POST",
+        headers: { Origin: "http://127.0.0.1:5173" },
+      });
+      expect(fromSite.status).toBe(403);
+      const resumed = await fetch(`${helper.base}/control/resume`, { method: "POST" });
+      expect(((await resumed.json()) as { status: { collecting: boolean } }).status.collecting).toBe(true);
+    } finally {
+      await helper.loop.whenIdle();
+      helper.loop.stop();
+      helper.server.close();
+      helper.db.close();
+    }
+  });
 });
 
 function openDb(root: string): LocalDb {
@@ -158,6 +181,29 @@ describe("local helper", () => {
       body: JSON.stringify({ code: "abc", apiUrl: "http://127.0.0.1:4000" }),
     });
     expect(accepted.status).toBe(201);
+
+    const strictDb = openDb(tempRoot());
+    const strict = await startLocalServer({
+      db: strictDb,
+      port: 0,
+      webOrigin: "https://automatic-project-map-staging.vercel.app",
+      strictWebOrigin: true,
+      fetchImpl: async () => new Response("{}", { status: 500 }),
+    });
+    const strictPort = (strict.address() as AddressInfo).port;
+    const localDev = await fetch(`http://127.0.0.1:${strictPort}/pair`, {
+      method: "POST",
+      headers: { Origin: "http://127.0.0.1:5173", "Content-Type": "application/json" },
+      body: JSON.stringify({ code: "nope" }),
+    });
+    expect(localDev.status).toBe(403);
+    const staging = await fetch(`http://127.0.0.1:${strictPort}/`, {
+      headers: { Origin: "https://automatic-project-map-staging.vercel.app" },
+    });
+    expect(staging.status).toBe(200);
+    expect(staging.headers.get("access-control-allow-origin")).toBe("https://automatic-project-map-staging.vercel.app");
+    strict.close();
+    strictDb.close();
     expect(db.pairing(projectId)?.deviceToken).toBe("apm_test");
     server.close();
     db.close();

@@ -39,6 +39,8 @@ export type CollectorStatus = {
   paused: PausedSession[];
   lastError: string | null;
   nextUploadAt: string | null;
+  /** False after Pause in the menu bar. Session pauses are `paused`, not this flag. */
+  collecting: boolean;
   projects: ProjectCollectorStatus[];
 };
 
@@ -85,6 +87,8 @@ export class CollectorLoop {
   private readonly projects = new Map<string, ProjectState>();
   private running: Promise<CollectorStatus> | null = null;
   private timer: ReturnType<typeof setInterval> | null = null;
+  /** Menu-bar Pause. tick() does not scan or upload while this is set. */
+  private pausedByUser = false
   private lastScanAt: string | null = null;
   private uploaded = 0;
   private dropped = 0;
@@ -100,6 +104,7 @@ export class CollectorLoop {
     paused: [],
     lastError: null,
     nextUploadAt: null,
+    collecting: false,
     projects: [],
   };
 
@@ -123,6 +128,7 @@ export class CollectorLoop {
   status(): CollectorStatus {
     return {
       ...this.current,
+      collecting: !this.pausedByUser,
       paused: [...this.current.paused],
       projects: this.current.projects.map((project) => ({ ...project, paused: [...project.paused] })),
     };
@@ -132,6 +138,7 @@ export class CollectorLoop {
     if (this.timer) {
       return;
     }
+    this.pausedByUser = false;
     void this.tick();
     this.timer = setInterval(() => void this.tick(), this.options.scanIntervalMs ?? defaultScanIntervalMs);
   }
@@ -143,8 +150,30 @@ export class CollectorLoop {
     }
   }
 
+  /** Stops the timed scan. The local server stays up so the site can still see this computer. */
+  pause(): void {
+    this.pausedByUser = true;
+    this.stop();
+  }
+
+  resume(): void {
+    if (!this.pausedByUser && this.timer) {
+      return;
+    }
+    this.pausedByUser = false;
+    this.start();
+  }
+
+  /** Resolves when the current scan finishes. Used so a caller can close the database after resume. */
+  whenIdle(): Promise<void> {
+    return this.running?.then(() => undefined, () => undefined) ?? Promise.resolve();
+  }
+
   /** Scans once and uploads what is queued. Calls that overlap a running pass wait for it. */
   tick(): Promise<CollectorStatus> {
+    if (this.pausedByUser) {
+      return Promise.resolve(this.status());
+    }
     this.running ??= this.runOnce().finally(() => {
       this.running = null;
     });
@@ -314,6 +343,7 @@ export class CollectorLoop {
       paused: projects.flatMap((project) => project.paused),
       lastError: projects.find((project) => project.lastError !== null)?.lastError ?? null,
       nextUploadAt: latest(projects.map((project) => project.nextUploadAt), (a, b) => a < b),
+      collecting: !this.pausedByUser,
       projects,
     };
   }

@@ -241,6 +241,25 @@ describe("collector loop", () => {
     db.close();
   });
 
+  it("stops timed scans while paused and keeps the helper able to report status", async () => {
+    const root = tempRoot();
+    const db = new LocalDb(join(root, "collector.sqlite"));
+    const loop = new CollectorLoop({ db, logRoots: {}, scanIntervalMs: 60_000 });
+    try {
+      loop.start();
+      expect(loop.status().collecting).toBe(true);
+      loop.pause();
+      expect(loop.status().collecting).toBe(false);
+      expect((await loop.tick()).lastScanAt).toBeNull();
+      loop.resume();
+      expect(loop.status().collecting).toBe(true);
+      await loop.whenIdle();
+    } finally {
+      loop.stop();
+      db.close();
+    }
+  });
+
   it("does not run two scans at once", async () => {
     const root = tempRoot();
     const db = new LocalDb(join(root, "collector.sqlite"));

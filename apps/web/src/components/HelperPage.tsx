@@ -16,8 +16,10 @@ import {
   type HelperStatus,
 } from "../api";
 import { agentLabel, formatDateTime } from "../format";
+import { currentSiteOrigin, offerMacHelperDownload } from "../mac-helper";
 import { supabase } from "../supabase";
 import { LogoMark } from "./GithubMark";
+import { MacHelperDownload } from "./MacHelperDownload";
 import { cx } from "./helpers";
 import { useToast } from "./toast-context";
 import { AgentBadge, Button, ErrorNote, Field, Spinner, inputClass } from "./ui";
@@ -136,7 +138,11 @@ export function HelperPage() {
             <Spinner />
           </div>
         ) : overview === null ? (
-          <ErrorNote>The helper is not running on this computer. Start it with npm run dev:helper.</ErrorNote>
+          offerMacHelperDownload(currentSiteOrigin()) ? (
+            <MacHelperDownload />
+          ) : (
+            <ErrorNote>The helper is not running on this computer. Start it with npm run dev:helper.</ErrorNote>
+          )
         ) : (
           <div className="space-y-3.5">
             {pairings.length === 0 ? (
