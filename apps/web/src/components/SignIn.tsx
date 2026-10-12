@@ -1,3 +1,4 @@
+import { CircleCheck, GitPullRequest } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { agentLabel, productName } from "../format";
 import { GithubMark, LogoMark } from "./GithubMark";
@@ -28,7 +29,7 @@ export function SignIn({ onSignIn }: { onSignIn: () => Promise<string | null> })
         <section className="mt-14 max-w-2xl sm:mt-20">
           <h1 className="text-4xl font-semibold tracking-tight text-balance text-zinc-900 sm:text-5xl">A live map of the work.</h1>
           <p className="mt-4 max-w-xl text-lg leading-relaxed text-zinc-600">
-            Pull requests, CI, and sessions from Codex, Claude Code, and Cursor, grouped into features. Nobody has to update a board.
+            Pull requests, CI, and sessions from Codex, Claude Code, and Cursor, grouped into features.
           </p>
         </section>
 
@@ -39,6 +40,16 @@ export function SignIn({ onSignIn }: { onSignIn: () => Promise<string | null> })
           <ol className="mt-4 grid items-stretch gap-4 lg:grid-cols-2">
             <li className="flex min-w-0 flex-col rounded-2xl bg-white p-5 shadow-sm ring-1 ring-zinc-200">
               <StepIndex>1</StepIndex>
+              <h3 className="mt-3 text-base font-semibold text-zinc-900">Install the local helper</h3>
+              <p className="mt-1 text-sm leading-relaxed text-zinc-600">
+                Paste this in Terminal on your Mac. Allow folder access, then connect this computer in Settings.
+              </p>
+              <div className="mt-auto pt-5">
+                <MacHelperDownload />
+              </div>
+            </li>
+            <li className="flex min-w-0 flex-col rounded-2xl bg-white p-5 shadow-sm ring-1 ring-zinc-200">
+              <StepIndex>2</StepIndex>
               <h3 className="mt-3 text-base font-semibold text-zinc-900">Continue with GitHub</h3>
               <p className="mt-1 text-sm leading-relaxed text-zinc-600">Sign in with an account that can see the repository.</p>
               <div className="mt-auto pt-5">
@@ -64,16 +75,6 @@ export function SignIn({ onSignIn }: { onSignIn: () => Promise<string | null> })
                 ) : null}
               </div>
             </li>
-            <li className="flex min-w-0 flex-col rounded-2xl bg-white p-5 shadow-sm ring-1 ring-zinc-200">
-              <StepIndex>2</StepIndex>
-              <h3 className="mt-3 text-base font-semibold text-zinc-900">Install the local helper</h3>
-              <p className="mt-1 text-sm leading-relaxed text-zinc-600">
-                Paste this in Terminal on your Mac. Allow folder access, then connect this computer in Settings.
-              </p>
-              <div className="mt-auto pt-5">
-                <MacHelperDownload />
-              </div>
-            </li>
           </ol>
         </section>
 
@@ -81,15 +82,18 @@ export function SignIn({ onSignIn }: { onSignIn: () => Promise<string | null> })
           <h2 id="guide-heading" className="text-xs font-semibold tracking-wide text-zinc-500 uppercase">
             On the map
           </h2>
-          <ul className="mt-4 grid gap-4 md:grid-cols-3">
+          <ul className="mt-4 grid gap-4 sm:grid-cols-2">
             <GuideCard title="Features" detail="Related work stays on one card, with a status you can read at a glance.">
               <FeaturePreview />
             </GuideCard>
             <GuideCard title="Coding agents" detail="Sessions from Codex, Claude Code, and Cursor show up beside the code.">
               <AgentPreview />
             </GuideCard>
-            <GuideCard title="The detail" detail="Open a feature for the pull request, CI, and the session that started it.">
-              <DetailPreview />
+            <GuideCard title="Pull request" detail="Open a work item to see its pull request and whether CI passed.">
+              <PullPreview />
+            </GuideCard>
+            <GuideCard title="The session" detail="The request and the agent's reply stay attached to that work.">
+              <SessionPreview />
             </GuideCard>
           </ul>
         </section>
@@ -106,8 +110,8 @@ function StepIndex({ children }: { children: string }) {
 
 function GuideCard({ title, detail, children }: { title: string; detail: string; children: ReactNode }) {
   return (
-    <li className="flex min-w-0 flex-col rounded-2xl bg-white p-4 shadow-sm ring-1 ring-zinc-200">
-      <div className="flex min-h-44 items-center rounded-xl bg-[#f7f7f8] p-3 ring-1 ring-zinc-200/70">
+    <li className="flex h-full min-w-0 flex-col rounded-2xl bg-white p-4 shadow-sm ring-1 ring-zinc-200">
+      <div className="flex min-h-44 flex-1 items-center rounded-xl bg-[#f7f7f8] p-3 ring-1 ring-zinc-200/70">
         <div className="w-full">{children}</div>
       </div>
       <h3 className="mt-4 text-sm font-semibold text-zinc-900">{title}</h3>
@@ -153,15 +157,47 @@ function AgentPreview() {
   );
 }
 
-function DetailPreview() {
+function PullPreview() {
   return (
     <div className="rounded-lg bg-white p-3 ring-1 ring-zinc-200" aria-hidden>
-      <StateChip state="in_review" />
-      <p className="mt-3 text-sm font-medium text-zinc-900">Add receipt export</p>
-      <p className="mt-1 text-xs text-zinc-500">Pull request #128 · CI passed</p>
-      <div className="mt-3 flex items-center gap-2 border-t border-zinc-100 pt-3">
-        <AgentBadge source="claude_code" size={18} />
-        <span className="text-xs text-zinc-600">Claude Code session</span>
+      <p className="text-[11px] font-semibold tracking-wide text-indigo-600 uppercase">Billing</p>
+      <p className="mt-1 text-sm font-semibold text-zinc-900">Add receipt export</p>
+      <div className="mt-2">
+        <StateChip state="in_review" />
+      </div>
+      <div className="mt-3 flex items-start gap-2.5 border-t border-zinc-100 pt-3">
+        <span className="inline-flex size-7 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
+          <GitPullRequest className="size-4" />
+        </span>
+        <div className="min-w-0">
+          <p className="text-sm font-medium text-zinc-900">
+            Add receipt export <span className="font-normal text-zinc-400">#128</span>
+          </p>
+          <p className="mt-1 flex items-center gap-1.5 text-xs text-zinc-500">
+            <CircleCheck className="size-3.5 text-emerald-600" />
+            Open · CI passed
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SessionPreview() {
+  return (
+    <div className="rounded-lg bg-white p-3 ring-1 ring-zinc-200" aria-hidden>
+      <div className="flex items-center gap-2">
+        <AgentBadge source="claude_code" size={20} />
+        <span className="min-w-0 flex-1 truncate text-xs font-medium text-zinc-700">Claude Code session</span>
+        <span className="shrink-0 rounded-full bg-zinc-100 px-2 py-0.5 text-[11px] text-zinc-500">Linked by AI</span>
+      </div>
+      <div className="mt-2.5 rounded-lg bg-indigo-50/70 px-2.5 py-2">
+        <p className="text-[11px] font-semibold tracking-wide text-zinc-500 uppercase">Request</p>
+        <p className="mt-0.5 text-[13px] leading-relaxed text-zinc-700">Add a way to export receipts.</p>
+      </div>
+      <div className="mt-2 rounded-lg bg-zinc-50 px-2.5 py-2">
+        <p className="text-[11px] font-semibold tracking-wide text-zinc-500 uppercase">Claude Code</p>
+        <p className="mt-0.5 text-[13px] leading-relaxed text-zinc-700">Opened a pull request for the export.</p>
       </div>
     </div>
   );
