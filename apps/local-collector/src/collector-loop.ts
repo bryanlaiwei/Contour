@@ -66,6 +66,18 @@ export function defaultLogRoots(env: NodeJS.ProcessEnv, home: string = homedir()
   return roots;
 }
 
+/** Writes the folders to scan into `target`. A saved path replaces that agent's default. */
+export function applyLogRootOverrides(target: LogRoots, defaults: LogRoots, overrides: LogRoots): void {
+  for (const agent of agents) {
+    const next = overrides[agent.id] ?? defaults[agent.id];
+    if (next) {
+      target[agent.id] = next;
+    } else {
+      delete target[agent.id];
+    }
+  }
+}
+
 export function describeLogRoots(roots: LogRoots): string[] {
   return agents.flatMap((agent) => {
     const root = roots[agent.id];

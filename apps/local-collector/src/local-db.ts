@@ -144,6 +144,21 @@ export class LocalDb {
     this.db.close();
   }
 
+  /** A folder chosen in Settings for one agent. Null means the default folder. */
+  logRootOverride(agentId: string): string | null {
+    const row = this.db.prepare("select value from meta where key = ?").get(`log_root:${agentId}`) as { value: string } | undefined;
+    return row?.value ?? null;
+  }
+
+  setLogRootOverride(agentId: string, path: string | null): void {
+    const key = `log_root:${agentId}`;
+    if (path === null) {
+      this.db.prepare("delete from meta where key = ?").run(key);
+      return;
+    }
+    this.db.prepare("insert into meta (key, value) values (?, ?) on conflict(key) do update set value = excluded.value").run(key, path);
+  }
+
   localSecret(): string {
     const existing = this.db.prepare("select value from meta where key = 'local_secret'").get() as
       | { value: string }

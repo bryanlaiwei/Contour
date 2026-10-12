@@ -1,7 +1,8 @@
 // Reads command-line arguments and either prints events for one log file or starts the local helper.
 // The helper is the long-running process the web app pairs with.
 
-import { CollectorLoop, defaultLogRoots, defaultScanIntervalMs, describeLogRoots } from "./collector-loop.js";
+import { CollectorLoop, applyLogRootOverrides, defaultLogRoots, defaultScanIntervalMs, describeLogRoots } from "./collector-loop.js";
+import type { LogRoots } from "./collection-pass.js";
 import type { SessionAgentId } from "./contract/adapter.js";
 import { readLogAccess } from "./log-access.js";
 import { startLocalServer } from "./local-server.js";
@@ -25,7 +26,10 @@ export async function runCli(argv: string[], env: NodeJS.ProcessEnv, io: CliIo):
     const port = Number(env.APM_HELPER_PORT ?? env.APM_COLLECTOR_PORT ?? 47321);
     const dbPath = env.APM_HELPER_DB ?? env.APM_COLLECTOR_DB ?? "collector.sqlite";
     const db = new LocalDb(dbPath);
-    const logRoots = defaultLogRoots(env);
+    const defaults = defaultLogRoots(env);
+    const logRoots: ReturnType<typeof defaultLogRoots> = {};
+    const refreshLogRoots = () => applyLogRootOverrides(logRoots, defaults, savedLogRoots(db));
+    refreshLogRoots();
     const loop = new CollectorLoop({
       db,
       logRoots,
@@ -38,6 +42,10 @@ export async function runCli(argv: string[], env: NodeJS.ProcessEnv, io: CliIo):
       webOrigin: env.WEB_ORIGIN ?? "http://127.0.0.1:5173",
       strictWebOrigin: env.APM_HELPER_STRICT_ORIGIN === "1",
       logRoots,
+      defaultLogRoots: defaults,
+      onLogRootsChanged: () => {
+        refreshLogRoots();
+      },
       logAccess: () => readLogAccess(logRoots),
       status: () => loop.status(),
       scanNow: () => loop.tick(),
@@ -52,6 +60,17 @@ export async function runCli(argv: string[], env: NodeJS.ProcessEnv, io: CliIo):
     return { exitCode: 0 };
   }
   return runParse(argv, io);
+}
+
+function savedLogRoots(db: LocalDb): LogRoots {
+  const overrides: LogRoots = {};
+  for (const id of agents) {
+    const path = db.logRootOverride(id);
+    if (path) {
+      overrides[id] = path;
+    }
+  }
+  return overrides;
 }
 
 function runParse(argv: string[], io: CliIo): CliResult {

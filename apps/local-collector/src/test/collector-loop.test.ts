@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { type NormalizedEvent } from "@apm/shared";
 import { afterEach, describe, expect, it } from "vitest";
-import { CollectorLoop, defaultLogRoots, uploadBackoffMs } from "../collector-loop.js";
+import { CollectorLoop, applyLogRootOverrides, defaultLogRoots, uploadBackoffMs } from "../collector-loop.js";
 import { LocalDb } from "../local-db.js";
 import { UploadError, type EventUploadTransport } from "../upload-outbox.js";
 
@@ -61,6 +61,15 @@ describe("collector loop", () => {
       cursor: "/home/me/.cursor",
     });
     expect(defaultLogRoots({ APM_CURSOR_SESSIONS: "/tmp/cursor" }, "/home/me").cursor).toBe("/tmp/cursor");
+  });
+
+  it("uses a saved session folder in place of the default", () => {
+    const target = defaultLogRoots({}, "/home/me");
+    applyLogRootOverrides(target, defaultLogRoots({}, "/home/me"), { cursor: "/logs/cursor" });
+    expect(target.cursor).toBe("/logs/cursor");
+    expect(target.codex).toBe("/home/me/.codex/sessions");
+    applyLogRootOverrides(target, defaultLogRoots({}, "/home/me"), {});
+    expect(target.cursor).toBe("/home/me/.cursor");
   });
 
   it("scans selected folders, uploads new messages once, and backs off while the server is down", async () => {

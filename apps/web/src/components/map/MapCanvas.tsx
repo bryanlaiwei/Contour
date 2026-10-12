@@ -17,7 +17,8 @@ import {
 } from "@xyflow/react";
 import { LayoutGrid, Maximize, Minus, Plus } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import type { Graph } from "../../api";
+import type { Graph, WorkItemState } from "../../api";
+import { stateMeta } from "../../format";
 import { cx } from "../helpers";
 import { IconButton } from "../ui";
 import { MapActionsContext, type MapActions } from "./actions";
@@ -51,6 +52,15 @@ function DependencyEdgeView({ id, sourceX, sourceY, targetX, targetY, sourcePosi
     </>
   );
 }
+
+const legendStates: Record<WorkItemState, true> = {
+  planned: true,
+  in_progress: true,
+  in_review: true,
+  merged: true,
+  closed: true,
+  unknown: true,
+};
 
 const nodeTypes = { feature: FeatureNode };
 const edgeTypes = { dependency: DependencyEdgeView };
@@ -222,6 +232,19 @@ function MapCanvasInner({
           className="bg-[#f7f7f8]"
         >
           <Background variant={BackgroundVariant.Dots} gap={22} size={1.4} color="#d4d4d8" />
+          <Panel position="top-right" style={{ marginTop: 16, marginRight: panelOpen ? 468 : 16 }}>
+            <div className="rounded-xl bg-white/95 px-3 py-2.5 shadow-sm ring-1 ring-zinc-200 backdrop-blur">
+              <p className="mb-1.5 text-[11px] font-semibold tracking-wide text-zinc-500 uppercase">Status</p>
+              <ul className="space-y-1">
+                {(Object.keys(legendStates) as WorkItemState[]).map((state) => (
+                  <li key={state} className="flex items-center gap-2 text-xs text-zinc-700">
+                    <span className={cx("size-2 shrink-0 rounded-full", stateMeta[state].dot)} />
+                    {stateMeta[state].label}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </Panel>
           <Panel position="bottom-left" className="!m-4">
             <div className="flex items-center gap-0.5 rounded-xl bg-white p-1 shadow-sm ring-1 ring-zinc-200">
               <IconButton label="Zoom in" onClick={() => void flow.zoomIn({ duration: 150 })}>

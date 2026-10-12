@@ -115,4 +115,14 @@ describe("pairing", () => {
     expect(db.isExcluded("codex", "old-session", projectId)).toBe(true);
     db.close();
   });
+
+  it("keeps a chosen session folder until it is cleared", () => {
+    const db = new LocalDb(join(tempRoot(), "collector.sqlite"));
+    expect(db.logRootOverride("cursor")).toBeNull();
+    db.setLogRootOverride("cursor", "/logs/cursor");
+    expect(db.logRootOverride("cursor")).toBe("/logs/cursor");
+    db.setLogRootOverride("cursor", null);
+    expect(db.logRootOverride("cursor")).toBeNull();
+    db.close();
+  });
 });
