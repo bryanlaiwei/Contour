@@ -3,6 +3,7 @@
 
 import { CollectorLoop, defaultLogRoots, defaultScanIntervalMs, describeLogRoots } from "./collector-loop.js";
 import type { SessionAgentId } from "./contract/adapter.js";
+import { readLogAccess } from "./log-access.js";
 import { startLocalServer } from "./local-server.js";
 import { LocalDb } from "./local-db.js";
 import { collectSession } from "./parse-file.js";
@@ -35,9 +36,13 @@ export async function runCli(argv: string[], env: NodeJS.ProcessEnv, io: CliIo):
       db,
       port,
       webOrigin: env.WEB_ORIGIN ?? "http://127.0.0.1:5173",
+      strictWebOrigin: env.APM_HELPER_STRICT_ORIGIN === "1",
       logRoots,
+      logAccess: () => readLogAccess(logRoots),
       status: () => loop.status(),
       scanNow: () => loop.tick(),
+      pause: () => loop.pause(),
+      resume: () => loop.resume(),
     });
     loop.start();
     const address = server.address();

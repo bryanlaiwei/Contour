@@ -1,12 +1,14 @@
 import { Activity, ChevronDown, Copy, KeyRound, Laptop, Settings2, Trash2, UserPlus, Users, X } from "lucide-react";
 import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { api, errorMessage, pairLocalHelper, readHelperStatus, type HelperStatus, type ModelProviderId, type ModelSetup, type ProjectSettings, type SupplierModel } from "../../api";
+import { currentSiteOrigin, offerMacHelperDownload } from "../../mac-helper";
 import { releaseChoosesModelKey, releaseSharesProjects } from "../../release";
 import { formatDateTime, timeAgo } from "../../format";
 import { ConfirmDialog } from "../corrections/Dialogs";
 import { GithubMark } from "../GithubMark";
 import { useToast } from "../toast-context";
 import { cx, useNow } from "../helpers";
+import { MacHelperDownload } from "../MacHelperDownload";
 import { Avatar, Button, ErrorNote, Field, IconButton, Spinner, TimeAgo, inputClass } from "../ui";
 
 export type SettingsTab = "general" | "members" | "helper" | "model" | "health";
@@ -378,7 +380,13 @@ function HelperTab({ token, settings, reload }: { token: string; settings: Proje
       await reload();
       toast("Helper connected. Choose this project’s folders on the helper page.");
     } catch (reason) {
-      setError(reason instanceof TypeError ? "The helper is not running on this computer. Start it with npm run dev:helper." : errorMessage(reason, "Pairing failed."));
+      setError(
+        reason instanceof TypeError
+          ? offerMacHelperDownload(currentSiteOrigin())
+            ? "The helper is not running on this computer."
+            : "The helper is not running on this computer. Start it with npm run dev:helper."
+          : errorMessage(reason, "Pairing failed."),
+      );
       setFallbackCode(code);
     } finally {
       setConnecting(false);
@@ -386,6 +394,7 @@ function HelperTab({ token, settings, reload }: { token: string; settings: Proje
   }
 
   const running = status !== null && status !== undefined;
+  const offerDownload = status === null && offerMacHelperDownload(currentSiteOrigin());
   const here = running ? status.projects.find((entry) => entry.projectId === settings.project.id) : undefined;
   const others = running ? status.projects.length - (here ? 1 : 0) : 0;
   const connected = here !== undefined && !here.needsPairing;
@@ -398,19 +407,23 @@ function HelperTab({ token, settings, reload }: { token: string; settings: Proje
           <span className={cx("mt-1.5 size-2.5 shrink-0 rounded-full", tone)} />
           <div className="min-w-0 flex-1">
             <p className="text-sm font-medium text-zinc-900">This computer</p>
-            <p className="mt-0.5 text-sm text-zinc-500">
-              {status === undefined
-                ? "Checking for the helper…"
-                : !running
-                  ? "The helper is not running. Start it with npm run dev:helper to collect Codex, Claude Code and Cursor sessions."
-                  : !here
-                    ? `Running, but not connected to this project yet.${others > 0 ? ` It keeps collecting for ${others} other project${others === 1 ? "" : "s"}.` : ""}`
-                    : here.needsPairing
-                      ? "The server no longer accepts this computer for this project. Reconnect it."
-                      : here.selectedFolders === 0
-                        ? "Connected, but no folders are chosen for this project, so no sessions are collected yet."
-                        : `${here.selectedFolders} folder${here.selectedFolders === 1 ? "" : "s"} selected · last upload ${timeAgo(here.lastUploadAt, now)}${here.queued > 0 ? ` · ${here.queued} waiting` : ""}`}
-            </p>
+            {offerDownload ? (
+              <MacHelperDownload />
+            ) : (
+              <p className="mt-0.5 text-sm text-zinc-500">
+                {status === undefined
+                  ? "Checking for the helper…"
+                  : !running
+                    ? "The helper is not running. Start it with npm run dev:helper to collect Codex, Claude Code and Cursor sessions."
+                    : !here
+                      ? `Running, but not connected to this project yet.${others > 0 ? ` It keeps collecting for ${others} other project${others === 1 ? "" : "s"}.` : ""}`
+                      : here.needsPairing
+                        ? "The server no longer accepts this computer for this project. Reconnect it."
+                        : here.selectedFolders === 0
+                          ? "Connected, but no folders are chosen for this project, so no sessions are collected yet."
+                          : `${here.selectedFolders} folder${here.selectedFolders === 1 ? "" : "s"} selected · last upload ${timeAgo(here.lastUploadAt, now)}${here.queued > 0 ? ` · ${here.queued} waiting` : ""}`}
+              </p>
+            )}
             {here?.lastError ? <p className="mt-1 text-xs text-rose-600">{here.lastError}</p> : null}
             <div className="mt-3 flex flex-wrap gap-2">
               <Button size="sm" variant={connected ? "secondary" : "primary"} loading={connecting} onClick={() => void connect()}>

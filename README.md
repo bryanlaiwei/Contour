@@ -65,7 +65,9 @@ npm run build --workspace @apm/web
 
 Required environment variables: `DATABASE_URL`, `GITHUB_WEBHOOK_SECRET`, `GITHUB_APP_ID`, `GITHUB_APP_PRIVATE_KEY`, `SUPABASE_URL` (and `SUPABASE_JWT_SECRET` when tokens are still HS256), `APM_SECRETS_KEY`, and `WEB_ORIGIN`. `OPENAI_API_KEY` is only for a server-wide model key. A missing `.env` file is fine. Variables already set in the environment are left as they are.
 
-`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, and `VITE_API_URL` have to be set before the web build. The helper still runs on each person's computer. Set that computer's `WEB_ORIGIN` to the hosted site so the site can reach it. Pairing sends the API address from `VITE_API_URL`.
+`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, and `VITE_API_URL` have to be set before the web build. The helper still runs on each person's computer. For local development, set that computer's `WEB_ORIGIN` to the site you opened, which defaults to `http://127.0.0.1:5173`. Pairing sends the API address from `VITE_API_URL`.
+
+The staging site offers a Mac app built from this same helper. That build only accepts `https://automatic-project-map-staging.vercel.app` and does not ask the person to set `WEB_ORIGIN`. `npm run dev:helper` remains the way to start the helper while developing. Build the app with `npm run build --workspace @apm/mac-helper`.
 
 Each API process opens `DATABASE_POOL_MAX` database connections (default 10) plus 2 for the webhook publisher. The worker opens `DATABASE_POOL_MAX` plus 4. Two API processes and one worker is 38 at the defaults. On Supabase, use the pooler connection string and lower `DATABASE_POOL_MAX`. Turn on database backups. Keep a copy of `APM_SECRETS_KEY` somewhere safe: saved model keys cannot be read without it.
 

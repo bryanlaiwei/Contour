@@ -8,6 +8,7 @@ import { sep } from "node:path";
 import { agents } from "./agents.js";
 import type { LogRoots } from "./collection-pass.js";
 import type { CollectorStatus } from "./collector-loop.js";
+import type { LogAccess } from "./log-access.js";
 import { LocalDb, type PairingRecord } from "./local-db.js";
 
 const defaultPort = 47321;
@@ -20,10 +21,16 @@ export type LocalServerOptions = {
   logRoots?: LogRoots;
   status?: () => CollectorStatus;
   scanNow?: () => Promise<unknown>;
+  /** When set, only this website may call the helper. Local development also allows the Vite origin. */
+  strictWebOrigin?: boolean;
+  logAccess?: () => LogAccess[];
+  pause?: () => void;
+  resume?: () => void;
 };
 
 export async function startLocalServer(options: LocalServerOptions): Promise<Server> {
   const webOrigin = options.webOrigin ?? "http://127.0.0.1:5173";
+  const strictWebOrigin = options.strictWebOrigin === true;
   const fetchImpl = options.fetchImpl ?? fetch;
 
   const server = createServer(async (req, res) => {
@@ -32,12 +39,12 @@ export async function startLocalServer(options: LocalServerOptions): Promise<Ser
       send(res, 403, { error: "The helper only accepts connections from this computer." });
       return;
     }
-    if (!originAllowed(req, webOrigin, port)) {
+    if (!originAllowed(req, webOrigin, port, strictWebOrigin)) {
       send(res, 403, { error: "This origin is not allowed to talk to the helper." });
       return;
     }
     if (req.method === "OPTIONS") {
-      res.writeHead(204, corsHeaders(req, webOrigin, port));
+      res.writeHead(204, corsHeaders(req, webOrigin, port, strictWebOrigin));
       res.end();
       return;
     }
@@ -61,6 +68,7 @@ export async function startLocalServer(options: LocalServerOptions): Promise<Ser
               enabled: folder.enabled,
             })),
             logRoots: logRootList(options.logRoots ?? {}),
+            logAccess: options.logAccess?.() ?? [],
             status: options.status?.() ?? null,
           },
           req,
@@ -109,7 +117,20 @@ export async function startLocalServer(options: LocalServerOptions): Promise<Ser
         send(res, 200, { status: options.status?.() ?? null }, req, webOrigin);
         return;
       }
-      if (!fromWebApp(req, webOrigin, port)) {
+      if (req.method === "POST" && (url.pathname === "/control/pause" || url.pathname === "/control/resume")) {
+        if (typeof req.headers.origin === "string") {
+          send(res, 403, { error: "Pause and resume are only available from the menu bar on this computer." }, req, webOrigin);
+          return;
+        }
+        if (url.pathname === "/control/pause") {
+          options.pause?.();
+        } else {
+          options.resume?.();
+        }
+        send(res, 200, { status: options.status?.() ?? null }, req, webOrigin);
+        return;
+      }
+      if (!fromWebApp(req, webOrigin, port, strictWebOrigin)) {
         send(res, 401, { error: "Open the helper from the web app on this computer." }, req, webOrigin);
         return;
       }
@@ -247,26 +268,29 @@ function logRootList(roots: LogRoots): Array<{ id: string; path: string }> {
 }
 
 /** Folder changes come from the web app, which sends its origin. Other callers do not. */
-function fromWebApp(req: IncomingMessage, webOrigin: string, port: number): boolean {
-  return typeof req.headers.origin === "string" && originAllowed(req, webOrigin, port);
+function fromWebApp(req: IncomingMessage, webOrigin: string, port: number, strictWebOrigin: boolean): boolean {
+  return typeof req.headers.origin === "string" && originAllowed(req, webOrigin, port, strictWebOrigin);
 }
 
-function originAllowed(req: IncomingMessage, webOrigin: string, port: number): boolean {
+function originAllowed(req: IncomingMessage, webOrigin: string, port: number, strictWebOrigin: boolean): boolean {
   const origin = req.headers.origin;
   if (!origin) {
     return true;
+  }
+  if (strictWebOrigin) {
+    return origin === webOrigin;
   }
   const self = new Set([`http://127.0.0.1:${port}`, `http://localhost:${port}`, webOrigin, "http://localhost:5173"]);
   return self.has(origin);
 }
 
-function corsHeaders(req: IncomingMessage, webOrigin: string, port: number): Record<string, string> {
+function corsHeaders(req: IncomingMessage, webOrigin: string, port: number, strictWebOrigin: boolean): Record<string, string> {
   const origin = req.headers.origin;
   const headers: Record<string, string> = {
     "Access-Control-Allow-Headers": "Content-Type",
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
   };
-  if (origin && originAllowed(req, webOrigin, port)) {
+  if (origin && originAllowed(req, webOrigin, port, strictWebOrigin)) {
     headers["Access-Control-Allow-Origin"] = origin;
     headers["Access-Control-Allow-Credentials"] = "true";
   }
@@ -286,10 +310,17 @@ async function readJson(req: IncomingMessage): Promise<Record<string, unknown>> 
   return typeof parsed === "object" && parsed !== null && !Array.isArray(parsed) ? (parsed as Record<string, unknown>) : {};
 }
 
-function send(res: ServerResponse, status: number, body: unknown, req?: IncomingMessage, webOrigin?: string): void {
+function send(
+  res: ServerResponse,
+  status: number,
+  body: unknown,
+  req?: IncomingMessage,
+  webOrigin?: string,
+  strictWebOrigin = false,
+): void {
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   if (req && webOrigin) {
-    Object.assign(headers, corsHeaders(req, webOrigin, req.socket.localPort ?? 0));
+    Object.assign(headers, corsHeaders(req, webOrigin, req.socket.localPort ?? 0, strictWebOrigin));
   }
   if (status === 204) {
     res.writeHead(status, headers);
