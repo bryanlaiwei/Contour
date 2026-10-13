@@ -1,5 +1,5 @@
 {
-  "name": "automatic-project-map",
+  "name": "contour",
   "private": true,
   "workspaces": [
     "apps/*",

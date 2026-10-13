@@ -7,7 +7,7 @@ import { join } from "node:path";
 import { runCli } from "../../local-collector/src/cli.js";
 import { stagingWebOrigin } from "../../../packages/shared/src/staging-helper.js";
 
-const support = join(homedir(), "Library", "Application Support", "Automatic Project Map");
+const support = join(homedir(), "Library", "Application Support", "Contour");
 mkdirSync(support, { recursive: true });
 process.env.WEB_ORIGIN = stagingWebOrigin;
 process.env.APM_HELPER_STRICT_ORIGIN = "1";
