@@ -2,18 +2,18 @@
 
 Contour is a feature map from GitHub and local agent work.
 
-This repository is the local pilot from the MVP plan: a TypeScript npm workspace with a React web app, an Express API, a pg-boss worker, a local helper, and local Supabase for Postgres and GitHub login.
+This repository is the TypeScript workspace for Contour: a React web app, an Express API, a background worker, a local helper, and Supabase for Postgres and GitHub login.
 
 ## Layout
 
 | Path | Role |
 |---|---|
-| `apps/web` | React, Vite, and Tailwind |
 | `apps/api` | Express HTTP routes |
-| `apps/worker` | pg-boss background jobs |
-| `packages/core` | Database, map processing, and other logic shared by the API and the worker |
-| `apps/local-collector` | Local helper, SQLite checkpoints and upload queue |
 | `apps/github-collector` | GitHub webhook normalization, enrichment, and refresh |
+| `apps/local-collector` | Local helper. The Mac menu-bar app is `mac/` |
+| `apps/web` | React map |
+| `apps/worker` | Background jobs that turn stored events into the map |
+| `packages/core` | Database, map processing, and other logic shared by the API and the worker |
 | `packages/shared` | Shared schemas and types |
 | `supabase` | Local Postgres and Auth |
 
@@ -67,7 +67,7 @@ Required environment variables: `DATABASE_URL`, `GITHUB_WEBHOOK_SECRET`, `GITHUB
 
 `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, and `VITE_API_URL` have to be set before the web build. The helper still runs on each person's computer. For local development, set that computer's `WEB_ORIGIN` to the site you opened, which defaults to `http://127.0.0.1:5173`. Pairing sends the API address from `VITE_API_URL`.
 
-The staging site gives a Terminal command that downloads the Mac app with curl, so Gatekeeper does not treat it as a browser download. That app is built from this same helper. That build only accepts `https://automatic-project-map-staging.vercel.app` and does not ask the person to set `WEB_ORIGIN`. `npm run dev:helper` remains the way to start the helper while developing. Build the app with `npm run build --workspace @apm/mac-helper`.
+The staging site gives a Terminal command that downloads the Mac app with curl, so Gatekeeper does not treat it as a browser download. That app is built from this same helper. That build only accepts `https://automatic-project-map-staging.vercel.app` and does not ask the person to set `WEB_ORIGIN`. `npm run dev:helper` remains the way to start the helper while developing. Build the app with `npm run build:mac --workspace @apm/local-collector`.
 
 Each API process opens `DATABASE_POOL_MAX` database connections (default 10) plus 2 for the webhook publisher. The worker opens `DATABASE_POOL_MAX` plus 4. Two API processes and one worker is 38 at the defaults. On Supabase, use the pooler connection string and lower `DATABASE_POOL_MAX`. Turn on database backups. Keep a copy of `APM_SECRETS_KEY` somewhere safe: saved model keys cannot be read without it.
 
