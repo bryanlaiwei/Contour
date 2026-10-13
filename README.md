@@ -1,7 +1,8 @@
 <p align="center">
-  <img src="apps/web/src/favicon.svg" alt="Contour" width="72" /><br>
-  <font size="6"><b>Contour</b></font>
+  <img src="apps/web/src/favicon.svg" alt="Contour" width="72" />
 </p>
+
+<h3 align="center">Contour</h3>
 
 <p align="center">
   A roadmap of your project, built automatically from GitHub activities and local coding-agent sessions.
