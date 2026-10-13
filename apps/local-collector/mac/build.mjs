@@ -26,7 +26,7 @@ mkdirSync(collectorDir, { recursive: true });
 mkdirSync(cache, { recursive: true });
 
 await esbuild.build({
-  entryPoints: [join(root, "src/main.ts")],
+  entryPoints: [join(root, "main.ts")],
   bundle: true,
   platform: "node",
   format: "cjs",
@@ -204,7 +204,7 @@ function compileMenu(arch) {
       "ServiceManagement",
       "-o",
       out,
-      join(root, "src/MenuBar.swift"),
+      join(root, "MenuBar.swift"),
     ],
     { stdio: "inherit" },
   );

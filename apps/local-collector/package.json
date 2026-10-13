@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "start": "tsx src/index.ts",
-    "typecheck": "tsc --noEmit",
+    "build:mac": "node mac/build.mjs",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p mac/tsconfig.json",
     "test": "vitest run"
   },
   "dependencies": {
@@ -16,6 +17,7 @@
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^22.18.6",
+    "esbuild": "^0.25.10",
     "tsx": "^4.20.5",
     "typescript": "^5.9.2",
     "vitest": "^3.2.4"
