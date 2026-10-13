@@ -8,8 +8,8 @@ This program accepts sign-in, repository connections, local session uploads, and
 flowchart TD
   signin["Browser sends a Supabase sign-in token"] --> member{"Person belongs to the project?"}
   member -->|no| reject["401 or 404"]
-  member -->|yes| graph["routes/graph.ts reads the map or saves a correction"]
-  member -->|yes| workspace["routes/workspace.ts reads settings, members, invitations, and layout"]
+  member -->|yes| mapRoutes["The map routes read the map or save a correction"]
+  member -->|yes| settingsRoutes["The workspace routes read settings, members, invitations, and layout"]
 
   connect["Connect a repository"] --> access["GitHub App confirms the repo and write access"]
   access --> project["Store the project"]
