@@ -1,11 +1,10 @@
-<h3 align="center">
-  <img src="apps/web/src/favicon.svg" alt="Contour" width="72" /><br>
-  Contour
-</h3>
-
 <p align="center">
-  A roadmap of your project, built automatically from GitHub activities and local coding-agent sessions.
+  <img src="apps/web/src/favicon.svg" alt="Contour" width="72" />
 </p>
+
+# [Contour](https://contourmaps.vercel.app)
+
+A roadmap of your project, built automatically from GitHub activities and local coding-agent sessions.
 
 <!-- <p align="center">
   <a href="#the-problem">The problem</a> •
