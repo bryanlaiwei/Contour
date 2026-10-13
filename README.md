@@ -53,7 +53,7 @@ Sign in with GitHub, connect a GitHub repository you can write to, and pair the 
 
 A feature is a card. Its work items come from sessions and GitHub activities. An open pull request means in review, a draft means in progress, and work counts as merged only when its pull requests say so. An agent saying "done" never marks anything merged. Open a card for its work items, then a work item for the pull requests, CI, session excerpts, and history behind it.
 
-You can rename a title, move cards around on the map, and merge features or work items.
+You can also manually rename a title, move cards around on the map, and merge features or work items.
 
 ## Project structure
 
