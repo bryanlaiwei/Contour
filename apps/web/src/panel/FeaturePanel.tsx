@@ -1,6 +1,6 @@
 import { Ban, Combine, Ellipsis } from "lucide-react";
 import { useEffect, useState } from "react";
-import { api, type Graph } from "../api";
+import { api, type FeatureDetail, type Graph } from "../api";
 import { describeCounts } from "../format";
 import { useToast } from "../ui/toast-context";
 import { ContributorList, EditableTitle, IconButton, Menu, SectionTitle, Spinner, StateBar, StateChip } from "../ui/ui";
@@ -19,6 +19,7 @@ export function FeaturePanel({
   onChanged,
   onGone,
   viewerLogin,
+  local,
 }: {
   token: string;
   projectId: string;
@@ -29,10 +30,20 @@ export function FeaturePanel({
   onChanged: () => Promise<void>;
   onGone: () => void;
   viewerLogin: string | null;
+  /** Sample map on the signed-out page. The signed-in map keeps using the API. */
+  local?: {
+    feature: FeatureDetail;
+    rename: (title: string) => Promise<void>;
+    merge: (survivingId: string) => Promise<void>;
+  };
 }) {
   const toast = useToast();
   const [merging, setMerging] = useState(false);
-  const { data, error, missing, loading } = useDetail(() => api.feature(token, projectId, featureId), featureId, graph.revision);
+  const { data, error, missing, loading } = useDetail(
+    () => (local ? Promise.resolve({ revision: graph.revision, feature: local.feature }) : api.feature(token, projectId, featureId)),
+    featureId,
+    graph.revision,
+  );
   const feature = data?.feature;
   const overview = graph.features.find((entry) => entry.id === featureId);
 
@@ -87,7 +98,11 @@ export function FeaturePanel({
           value={feature.title.value}
           className="mt-1 text-xl leading-snug font-semibold text-zinc-900"
           onSave={async (title) => {
-            await api.correct(token, projectId, { kind: "rename", target: "feature", id: feature.id, title });
+            if (local) {
+              await local.rename(title);
+            } else {
+              await api.correct(token, projectId, { kind: "rename", target: "feature", id: feature.id, title });
+            }
             await onChanged();
             toast("Feature renamed");
           }}
@@ -150,7 +165,11 @@ export function FeaturePanel({
           current={{ id: feature.id, title: feature.title.value }}
           features={graph.features}
           onMerge={async (survivingId) => {
-            await api.correct(token, projectId, { kind: "merge", target: "feature", retiredId: feature.id, survivingId });
+            if (local) {
+              await local.merge(survivingId);
+            } else {
+              await api.correct(token, projectId, { kind: "merge", target: "feature", retiredId: feature.id, survivingId });
+            }
             onSelectFeature(survivingId);
             await onChanged();
             toast("Features merged");

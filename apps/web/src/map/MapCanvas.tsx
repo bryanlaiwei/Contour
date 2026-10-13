@@ -80,6 +80,11 @@ type MapCanvasProps = {
   onTidy: () => Promise<void>;
   onBackgroundClick: () => void;
   empty: ReactNode;
+  legendLabel?: string;
+  /** Caps the automatic framing. The signed-in map stays at 1. */
+  fitViewMaxZoom?: number;
+  /** The sample map always opens at the same zoom, instead of restoring a saved view. */
+  restoreViewport?: boolean;
 };
 
 export function MapCanvas(props: MapCanvasProps) {
@@ -118,9 +123,12 @@ function MapCanvasInner({
   onTidy,
   onBackgroundClick,
   empty,
+  legendLabel = "Legend",
+  fitViewMaxZoom = 1,
+  restoreViewport = true,
 }: MapCanvasProps) {
   const flow = useReactFlow();
-  const [initialViewport] = useState(() => savedViewport(projectId));
+  const [initialViewport] = useState(() => (restoreViewport ? savedViewport(projectId) : null));
   const hadNodes = useRef(graph.features.length > 0);
   const container = useRef<HTMLDivElement>(null);
   const selectedExpanded = selectedFeatureId !== null && expanded.has(selectedFeatureId);
@@ -205,9 +213,19 @@ function MapCanvasInner({
   useEffect(() => {
     if (!hadNodes.current && nodes.length > 0) {
       hadNodes.current = true;
-      window.requestAnimationFrame(() => void flow.fitView({ padding: 0.25, maxZoom: 1, duration: 300 }));
+      window.requestAnimationFrame(() => void flow.fitView({ padding: 0.28, maxZoom: fitViewMaxZoom, duration: 300 }));
     }
-  }, [nodes.length, flow]);
+  }, [nodes.length, flow, fitViewMaxZoom]);
+
+  useEffect(() => {
+    if (restoreViewport && initialViewport) {
+      return;
+    }
+    const frame = window.requestAnimationFrame(() => {
+      void flow.fitView({ padding: 0.28, maxZoom: fitViewMaxZoom, duration: 0 });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [flow, fitViewMaxZoom, restoreViewport, initialViewport]);
 
   return (
     <MapActionsContext.Provider value={actions}>
@@ -220,7 +238,11 @@ function MapCanvasInner({
           onNodesChange={(changes: NodeChange<FeatureFlowNode>[]) => setNodes((current) => applyNodeChanges(changes, current))}
           onNodeDragStop={(_event, node) => onMoveFeature(node.id, { x: Math.round(node.position.x), y: Math.round(node.position.y) })}
           onPaneClick={onBackgroundClick}
-          onMoveEnd={(_event, viewport) => window.localStorage.setItem(viewportKey(projectId), JSON.stringify(viewport))}
+          onMoveEnd={(_event, viewport) => {
+            if (restoreViewport) {
+              window.localStorage.setItem(viewportKey(projectId), JSON.stringify(viewport));
+            }
+          }}
           elementsSelectable={false}
           nodesConnectable={false}
           selectNodesOnDrag={false}
@@ -229,7 +251,7 @@ function MapCanvasInner({
           snapGrid={[8, 8]}
           minZoom={0.2}
           maxZoom={1.75}
-          {...(initialViewport ? { defaultViewport: initialViewport } : { fitView: true, fitViewOptions: { padding: 0.25, maxZoom: 1 } })}
+          {...(initialViewport ? { defaultViewport: initialViewport } : { fitView: true, fitViewOptions: { padding: 0.28, maxZoom: fitViewMaxZoom } })}
           proOptions={{ hideAttribution: false }}
           className="bg-[#f5f5f7]"
         >
@@ -242,7 +264,7 @@ function MapCanvasInner({
                 onClick={() => setLegendOpen((open) => !open)}
                 className="flex items-center gap-1.5 rounded-xl bg-white px-2.5 py-1.5 text-left text-xs font-medium text-zinc-700 shadow-sm ring-1 ring-zinc-200"
               >
-                <span>Legend</span>
+                <span>{legendLabel}</span>
                 <ChevronDown className={cx("size-3.5 text-zinc-400 transition-transform duration-200 ease-out", legendOpen && "rotate-180")} />
               </button>
               <Disclosure open={legendOpen} className="absolute top-full right-0 z-10 mt-1 w-max max-w-72 rounded-xl bg-white shadow-sm ring-1 ring-zinc-200">

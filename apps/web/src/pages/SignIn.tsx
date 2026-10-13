@@ -1,11 +1,16 @@
-import { ArrowRight, CircleCheck, GitPullRequest, MessagesSquare } from "lucide-react";
-import { useState, type ReactNode } from "react";
-import { agentLabel, productName } from "../format";
+import { useState } from "react";
+import { GithubMark } from "../ui/GithubMark";
+import { Button, ErrorNote } from "../ui/ui";
 import { MacHelperDownload } from "./MacHelperDownload";
-import { GithubMark, LogoMark } from "../ui/GithubMark";
-import { AgentBadge, Button, ErrorNote, StateBar } from "../ui/ui";
+import { SampleMap } from "./SampleMap";
 
-const guideAgents = ["codex", "claude_code", "cursor"] as const;
+const mapNotes = [
+  { title: "Coding agents", detail: "Work done by Codex, Claude Code, and Cursor shows up on the map." },
+  { title: "Progress", detail: "Each card demonstrates how far along a feature is." },
+  { title: "Relationships", detail: "Relationships between features show up on the map." },
+  { title: "Details", detail: "Open a card to see information about the pull requests, the CI results, and key parts of the sessions." },
+  { title: "Projects", detail: "Create, delete, or swap projects as you wish." },
+] as const;
 
 export function SignIn({ onSignIn }: { onSignIn: () => Promise<string | null> }) {
   const [error, setError] = useState<string | null>(null);
@@ -14,20 +19,15 @@ export function SignIn({ onSignIn }: { onSignIn: () => Promise<string | null> })
   return (
     <div className="h-full overflow-x-hidden overflow-y-auto">
       <div className="mx-auto flex w-full max-w-5xl flex-col px-5 py-6 sm:px-8 sm:py-8">
-        <header className="flex items-center gap-2.5">
-          <LogoMark className="size-8" />
-          <span className="text-sm font-semibold tracking-tight text-zinc-900">{productName}</span>
-        </header>
-
-        <section className="mt-14 max-w-2xl sm:mt-20">
+        <section className="mt-6 max-w-2xl sm:mt-10">
           <h1 className="text-4xl font-semibold tracking-tight text-balance text-zinc-900 sm:text-5xl">A live map of the work.</h1>
           <p className="mt-4 max-w-xl text-lg leading-relaxed text-zinc-600">
-            Pull requests, CI, and coding-agent sessions become one map of progress, automatically.
+            Built from pull requests, Actions runs, and coding agent sessions.
           </p>
         </section>
 
         <section className="mt-14" aria-labelledby="setup-heading">
-          <h2 id="setup-heading" className="text-xs font-semibold tracking-wide text-zinc-500 uppercase">
+          <h2 id="setup-heading" className="text-sm font-medium text-zinc-500">
             Setup
           </h2>
           <ol className="mt-4 grid items-stretch gap-4 lg:grid-cols-2">
@@ -72,23 +72,20 @@ export function SignIn({ onSignIn }: { onSignIn: () => Promise<string | null> })
         </section>
 
         <section className="mt-14 pb-12" aria-labelledby="guide-heading">
-          <h2 id="guide-heading" className="text-xs font-semibold tracking-wide text-zinc-500 uppercase">
+          <h2 id="guide-heading" className="text-sm font-medium text-zinc-500">
             On the map
           </h2>
-          <ul className="mt-4 grid gap-4 sm:grid-cols-2">
-            <GuideCard title="Coding agents" detail="Codex, Claude Code, and Cursor sessions show up with the work.">
-              <AgentPreview />
-            </GuideCard>
-            <GuideCard title="Progress" detail="Each feature shows how far the work has gotten.">
-              <ProgressPreview />
-            </GuideCard>
-            <GuideCard title="Relationships" detail="One feature can wait on another.">
-              <RelationshipPreview />
-            </GuideCard>
-            <GuideCard title="The record" detail="Open a feature for the pull request, the CI result, and the session.">
-              <RecordPreview />
-            </GuideCard>
-          </ul>
+          <div className="mt-4 overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-zinc-200">
+            <SampleMap />
+            <ul className="grid grid-cols-1 gap-x-10 gap-y-6 border-t border-zinc-100 p-5 sm:grid-cols-2">
+              {mapNotes.map((note) => (
+                <li key={note.title}>
+                  <h3 className="text-sm font-semibold text-zinc-900">{note.title}</h3>
+                  <p className="mt-1 text-sm leading-relaxed text-zinc-600">{note.detail}</p>
+                </li>
+              ))}
+            </ul>
+          </div>
         </section>
       </div>
     </div>
@@ -101,85 +98,3 @@ function StepIndex({ children }: { children: string }) {
   );
 }
 
-function GuideCard({ title, detail, children }: { title: string; detail: string; children: ReactNode }) {
-  return (
-    <li className="flex h-full min-w-0 flex-col rounded-2xl bg-white p-4 shadow-sm ring-1 ring-zinc-200">
-      <div className="flex min-h-44 flex-1 items-center rounded-xl bg-[#f5f5f7] p-3 ring-1 ring-zinc-200/70">
-        <div className="w-full">{children}</div>
-      </div>
-      <h3 className="mt-4 text-sm font-semibold text-zinc-900">{title}</h3>
-      <p className="mt-1 text-sm leading-relaxed text-zinc-600">{detail}</p>
-    </li>
-  );
-}
-
-function ProgressPreview() {
-  return (
-    <div className="rounded-xl bg-white p-3 shadow-sm ring-1 ring-zinc-200" aria-hidden>
-      <p className="text-sm font-semibold text-zinc-900">Billing</p>
-      <div className="mt-3">
-        <StateBar counts={{ in_progress: 1, in_review: 1 }} />
-      </div>
-      <p className="mt-2 text-[11px] text-zinc-500">1 in progress · 1 in review</p>
-    </div>
-  );
-}
-
-function RelationshipPreview() {
-  return (
-    <div className="flex items-center gap-2" aria-hidden>
-      <MiniFeature title="Billing" counts={{ in_review: 1 }} />
-      <div className="flex shrink-0 flex-col items-center gap-1 text-zinc-400">
-        <span className="text-[10px] font-medium tracking-wide uppercase">waits for</span>
-        <ArrowRight className="size-3.5" />
-      </div>
-      <MiniFeature title="Auth" counts={{ merged: 1 }} />
-    </div>
-  );
-}
-
-function MiniFeature({ title, counts }: { title: string; counts: Parameters<typeof StateBar>[0]["counts"] }) {
-  return (
-    <div className="min-w-0 flex-1 rounded-xl bg-white p-2.5 shadow-sm ring-1 ring-zinc-200">
-      <p className="truncate text-sm font-semibold text-zinc-900">{title}</p>
-      <div className="mt-2">
-        <StateBar counts={counts} />
-      </div>
-    </div>
-  );
-}
-
-function AgentPreview() {
-  return (
-    <ul className="space-y-2" aria-hidden>
-      {guideAgents.map((source) => (
-        <li key={source} className="flex items-center gap-2.5 rounded-lg bg-white px-2.5 py-2 ring-1 ring-zinc-200">
-          <AgentBadge source={source} size={22} />
-          <span className="text-sm font-medium text-zinc-800">{agentLabel(source)}</span>
-        </li>
-      ))}
-    </ul>
-  );
-}
-
-const recordRows = [
-  { label: "Pull request", detail: "Open, draft, or merged", icon: <GitPullRequest className="size-4" /> },
-  { label: "CI", detail: "Passed or failed", icon: <CircleCheck className="size-4" /> },
-  { label: "Session", detail: "What was asked, and what the agent did", icon: <MessagesSquare className="size-4" /> },
-] as const;
-
-function RecordPreview() {
-  return (
-    <ul className="space-y-2" aria-hidden>
-      {recordRows.map((row) => (
-        <li key={row.label} className="flex items-center gap-2.5 rounded-lg bg-white px-2.5 py-2 ring-1 ring-zinc-200">
-          <span className="inline-flex size-7 shrink-0 items-center justify-center text-zinc-500">{row.icon}</span>
-          <span className="min-w-0">
-            <span className="block text-sm font-medium text-zinc-900">{row.label}</span>
-            <span className="block text-xs text-zinc-500">{row.detail}</span>
-          </span>
-        </li>
-      ))}
-    </ul>
-  );
-}
