@@ -57,6 +57,8 @@ npm start --workspace @apm/worker
 
 `npm start` listens on every interface and on `PORT` (otherwise `API_PORT`, otherwise 4000). Set `HOST` to pin the address. The API and the worker both stop on `SIGTERM`: the API stops accepting requests, stops the webhook publisher, and closes the database pool. A worker stopped during a model call releases the interpretation lease it holds.
 
+On Railway, the `api` and `worker` services take their build and start commands from `.railway/railway.ts`. Railway does not read that file during a deploy: after changing it, run `railway config plan`, then `railway config apply`. Secrets stay in the Railway dashboard; the file does not manage variables.
+
 The web app bakes its addresses in at build time, so set them before building:
 
 ```bash
