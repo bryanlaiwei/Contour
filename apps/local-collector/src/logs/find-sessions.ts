@@ -14,6 +14,8 @@ export type Discovered = {
   locator: SessionLocator;
   parsed: ParsedSession;
   generation: string;
+  /** The one read of this log for the scan. Later steps slice this buffer. */
+  logBytes: Buffer;
   byteOffset: string;
   nextCursor: string;
   newRecords: SessionMessage[];
@@ -41,6 +43,7 @@ function readDiscovered(adapter: AgentAdapter, locator: SessionLocator): Discove
     locator,
     parsed,
     generation,
+    logBytes: bytes,
     byteOffset: "0",
     nextCursor: String(completeEnd),
     newRecords: parsed.records,

@@ -1,7 +1,7 @@
-// Reads the bytes of a session log that come after the saved checkpoint.
+// Keeps the session messages that come after the saved checkpoint.
 // The checkpoint is the byte offset stored in the next_cursor column.
+// The bytes are the ones already read for this scan.
 
-import { readFileSync } from "node:fs";
 import type { AgentAdapter } from "../contract/adapter.js";
 import type { Discovered } from "./find-sessions.js";
 import { completePrefixEnd } from "./log-bytes.js";
@@ -14,7 +14,7 @@ export function sliceNewRecords(adapter: AgentAdapter, source: Discovered, saved
   if (offset === 0) {
     return { ...source, byteOffset: "" };
   }
-  const bytes = readFileSync(source.locator.logFile);
+  const bytes = source.logBytes;
   const completeEnd = completePrefixEnd(bytes);
   // The saved offset always sat just after a newline, so a file that no longer has one there was rewritten.
   if (bytes.length < offset || offset > completeEnd) {

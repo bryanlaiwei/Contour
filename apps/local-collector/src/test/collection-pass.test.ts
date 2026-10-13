@@ -1,7 +1,20 @@
 import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+
+const logReads = vi.hoisted(() => ({ paths: [] as string[] }));
+
+vi.mock("node:fs", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("node:fs")>();
+  return {
+    ...actual,
+    readFileSync: (...args: Parameters<typeof actual.readFileSync>) => {
+      logReads.paths.push(String(args[0]));
+      return actual.readFileSync(...args);
+    },
+  };
+});
 import { ChangeTracker } from "../logs/change-tracker.js";
 import { runCollectionPass } from "../collection-pass.js";
 import { LocalDb } from "../local-db.js";
@@ -211,6 +224,7 @@ describe("recoverable collection", () => {
         ],
       }),
     );
+    logReads.paths.length = 0;
     const second = runCollectionPass({
       db,
       projectId,
@@ -218,6 +232,7 @@ describe("recoverable collection", () => {
       selectedRoots: [cwd],
       logRoots: { codex: logs },
     });
+    expect(logReads.paths.filter((path) => path === file)).toHaveLength(1);
     expect(second.queuedEventIds).toHaveLength(1);
     const appended = db.pendingEvents().filter((item) => item.event.details.kind === "session.content_added");
     expect(appended).toHaveLength(2);
