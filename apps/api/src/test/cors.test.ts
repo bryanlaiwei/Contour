@@ -15,13 +15,13 @@ describe("web origin allow list", () => {
   it("allows this project's Vercel preview hosts", () => {
     expect(
       isAllowedWebOrigin(
-        "https://automatic-project-map-stagin-git-02ae82-bwei2398-5560s-projects.vercel.app",
+        "https://contour-git-mac-helper-contourmaps-bwei2398-5560s-projects.vercel.app",
         site,
       ),
     ).toBe(true);
     expect(
       isAllowedWebOrigin(
-        "https://automatic-project-map-staging-o0bq87r4t-bwei2398-5560s-projects.vercel.app",
+        "https://contour-hm153j5ch-bwei2398-5560s-projects.vercel.app",
         site,
       ),
     ).toBe(true);
@@ -29,11 +29,12 @@ describe("web origin allow list", () => {
 
   it("rejects other sites", () => {
     expect(isAllowedWebOrigin("https://evil.example", site)).toBe(false);
-    expect(isAllowedWebOrigin("https://automatic-project-map-evil.vercel.app", site)).toBe(false);
+    expect(isAllowedWebOrigin("https://contour-evil.vercel.app", site)).toBe(false);
     expect(isAllowedWebOrigin("https://other-app-bwei2398-5560s-projects.vercel.app", site)).toBe(false);
+    expect(isAllowedWebOrigin("https://automatic-project-map-staging-o0bq87r4t-bwei2398-5560s-projects.vercel.app", site)).toBe(false);
     expect(
       isAllowedWebOrigin(
-        "http://automatic-project-map-staging-abc-bwei2398-5560s-projects.vercel.app",
+        "http://contour-abc-bwei2398-5560s-projects.vercel.app",
         site,
       ),
     ).toBe(false);
