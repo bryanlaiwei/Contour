@@ -9,6 +9,17 @@
 </p>
 
 <p align="center">
+  <a href="#the-problem">The problem</a> •
+  <a href="#how-it-fits-together">How it fits together</a> •
+  <a href="#stack">Stack</a> •
+  <a href="#what-you-can-do">What you can do</a> •
+  <a href="#project-structure">Project structure</a> •
+  <a href="#run-it-locally">Run it locally</a> •
+  <a href="#scope">Scope</a> •
+  <a href="#license">License</a>
+</p>
+
+<p align="center">
   <img src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" />
   <img src="https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white" alt="Node.js" />
   <img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React" />
