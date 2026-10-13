@@ -2,9 +2,8 @@ import { Check, ChevronDown, CircleAlert, ExternalLink, LoaderCircle, LogOut, Ma
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ApiError, api, errorMessage, type Graph, type Me, type Project } from "../api";
 import { releaseSharesProjects } from "../release";
-import { productName } from "../format";
 import { EmptyMap } from "./EmptyMap";
-import { GithubMark, LogoMark } from "./GithubMark";
+import { GithubMark } from "./GithubMark";
 import { MapCanvas } from "./map/MapCanvas";
 import type { MapActions } from "./map/actions";
 import { freeSpot, placeNewFeatures, tidyLayout, type XY } from "./map/layout";
@@ -297,9 +296,6 @@ export function Workspace({
   return (
     <div className="flex h-full flex-col">
       <header className="z-30 flex h-14 shrink-0 items-center gap-2 border-b border-zinc-200 bg-white px-3 sm:gap-3 sm:px-4">
-        <LogoMark className="size-7 shrink-0" />
-        <span className="hidden shrink-0 text-sm font-semibold text-zinc-900 sm:inline">{productName}</span>
-        <span className="shrink-0 text-zinc-300">/</span>
         <div className="min-w-0 shrink">
         <Menu
           align="left"
