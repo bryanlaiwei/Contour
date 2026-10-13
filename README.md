@@ -9,12 +9,6 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Node.js->=22-3c873a?style=flat-square" alt="Node.js >= 22" />
-  <img src="https://img.shields.io/badge/TypeScript-blue?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript" />
-  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow?style=flat-square" alt="MIT License" /></a>
-</p>
-
-<p align="center">
   <a href="#the-problem">The problem</a> •
   <a href="#how-it-fits-together">How it fits together</a> •
   <a href="#stack">Stack</a> •
