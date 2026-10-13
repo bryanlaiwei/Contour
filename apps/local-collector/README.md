@@ -54,7 +54,7 @@ flowchart TD
 - `src/build-events.ts` turns new messages into `session.started` and `session.content_added` events. Each event stays within 8,000 characters, 200 messages, and 256 KiB.
 - `src/upload-outbox.ts` sends queued events to the API and leaves failed uploads in the outbox for a later try.
 - `src/parse-file.ts` reads one log file and prints the events it would produce. The 30-second scan does not use it.
-- `src/mac/main.ts` is the staging menu-bar entry. It forces the staging site, then runs the same helper as `npm run dev:helper`.
+- `src/mac/main.ts` is the menu-bar entry. It forces the hosted site, then runs the same helper as `npm run dev:helper`.
 - `src/mac/MenuBar.swift` is the Mac status item.
 - `src/mac/build.mjs` packages the menu bar, a Node binary, and this collector. Run it with `npm run build:mac`.
 - `src/fixtures/` holds sample Codex, Claude Code, and Cursor logs used by the tests.

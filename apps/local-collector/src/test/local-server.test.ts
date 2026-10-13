@@ -220,7 +220,7 @@ describe("local helper", () => {
     const strict = await startLocalServer({
       db: strictDb,
       port: 0,
-      webOrigin: "https://automatic-project-map-staging.vercel.app",
+      webOrigin: "https://contourmaps.vercel.app",
       strictWebOrigin: true,
       fetchImpl: async () => new Response("{}", { status: 500 }),
     });
@@ -231,11 +231,11 @@ describe("local helper", () => {
       body: JSON.stringify({ code: "nope" }),
     });
     expect(localDev.status).toBe(403);
-    const staging = await fetch(`http://127.0.0.1:${strictPort}/`, {
-      headers: { Origin: "https://automatic-project-map-staging.vercel.app" },
+    const site = await fetch(`http://127.0.0.1:${strictPort}/`, {
+      headers: { Origin: "https://contourmaps.vercel.app" },
     });
-    expect(staging.status).toBe(200);
-    expect(staging.headers.get("access-control-allow-origin")).toBe("https://automatic-project-map-staging.vercel.app");
+    expect(site.status).toBe(200);
+    expect(site.headers.get("access-control-allow-origin")).toBe("https://contourmaps.vercel.app");
     strict.close();
     strictDb.close();
     expect(db.pairing(projectId)?.deviceToken).toBe("apm_test");

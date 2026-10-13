@@ -1,5 +1,5 @@
-// Builds the staging menu-bar app: the current collector, a Node binary, and a Mac status item.
-// The app accepts only the staging website. npm run dev:helper is unchanged.
+// Builds the menu-bar app: the current collector, a Node binary, and a Mac status item.
+// The app accepts only the hosted website. npm run dev:helper is unchanged.
 
 import { execFileSync } from "node:child_process";
 import { createWriteStream, existsSync, mkdirSync, rmSync, chmodSync, cpSync, writeFileSync } from "node:fs";

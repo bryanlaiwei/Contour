@@ -9,7 +9,7 @@ const localDevOrigins = new Set([
 const vercelPreviewHostSuffix = "-bwei2398-5560s-projects.vercel.app";
 const vercelProjectPrefix = "automatic-project-map-";
 
-/** The staging site, local Vite, and this project's Vercel preview hosts. */
+/** The hosted site, local Vite, and this project's Vercel preview hosts. */
 export function isAllowedWebOrigin(origin: string, webOrigin: string): boolean {
   if (origin === webOrigin || localDevOrigins.has(origin)) {
     return true;
