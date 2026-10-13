@@ -27,16 +27,6 @@
   <img src="https://img.shields.io/badge/Railway-0B0D0E?style=for-the-badge&logo=railway&logoColor=white" alt="Railway" />
 </p>
 
-<p align="center">
-  <a href="#the-problem">The problem</a> •
-  <a href="#how-it-fits-together">How it fits together</a> •
-  <a href="#what-you-can-do">What you can do</a> •
-  <a href="#project-structure">Project structure</a> •
-  <a href="#run-it-locally">Run it locally</a> •
-  <a href="#scope">Scope</a> •
-  <a href="#license">License</a>
-</p>
-
 ## The problem
 
 A pull request, a CI run, and a coding-agent session are three records of the same work, and they live in different places. Contour puts them on one map automatically: what is being built, what state it is in, and what it depends on.
