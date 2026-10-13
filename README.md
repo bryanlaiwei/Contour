@@ -7,7 +7,7 @@
   A roadmap of your project, built automatically from GitHub activities and local coding-agent sessions.
 </p>
 
-<p align="center">
+<!-- <p align="center">
   <a href="#the-problem">The problem</a> •
   <a href="#how-it-fits-together">How it fits together</a> •
   <a href="#stack">Stack</a> •
@@ -16,7 +16,7 @@
   <a href="#run-it-locally">Run it locally</a> •
   <a href="#scope">Scope</a> •
   <a href="#license">License</a>
-</p>
+</p> -->
 
 ## The problem
 
