@@ -24,7 +24,11 @@ export default defineRailway((ctx) => {
     source: github("bryanlaiwei/Contour", { branch: "main" }),
   };
   const api = service("api", { ...hosted, replicas: { iad: 1 } });
-  const worker = service("worker", { ...hosted, replicas: { iad: 2 } });
+  const worker = service("worker", {
+    ...hosted,
+    replicas: { iad: 2 },
+    deploy: { numReplicas: 2 },
+  });
 
   return project(ctx.projectName, {
     variables: { managed: false },
