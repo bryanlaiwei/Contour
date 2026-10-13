@@ -1,6 +1,6 @@
-# automatic-project-map
+# Contour
 
-Automatic feature map from GitHub and local agent work.
+Contour is a feature map from GitHub and local agent work.
 
 This repository is the local pilot from the MVP plan: a TypeScript npm workspace with a React web app, an Express API, a pg-boss worker, a local helper, and local Supabase for Postgres and GitHub login.
 

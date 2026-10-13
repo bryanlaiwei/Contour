@@ -11,7 +11,7 @@ import * as esbuild from "esbuild";
 const root = dirname(fileURLToPath(import.meta.url));
 const cache = join(root, ".cache");
 const nodeVersion = "v22.19.0";
-const app = join(root, "build", "Automatic Project Map.app");
+const app = join(root, "build", "Contour.app");
 const contents = join(app, "Contents");
 const macos = join(contents, "MacOS");
 const resources = join(contents, "Resources");
@@ -78,7 +78,7 @@ chmodSync(join(resources, "node"), 0o755);
 // npm leaves .bin links that point at the build cache. codesign rejects a bundle that contains them.
 rmSync(join(collectorDir, "node_modules", ".bin"), { recursive: true, force: true });
 
-const menuOut = join(macos, "Automatic Project Map");
+const menuOut = join(macos, "Contour");
 if (menuBins.length === 1) {
   cpSync(menuBins[0], menuOut);
 } else {
@@ -91,7 +91,7 @@ writeFileSync(join(contents, "Info.plist"), infoPlistText());
 const identity = signingIdentity();
 execFileSync("codesign", ["--force", "--deep", "--sign", identity, app], { stdio: "inherit" });
 
-const zip = join(root, "build", "Automatic-Project-Map-Mac.zip");
+const zip = join(root, "build", "Contour-Mac.zip");
 rmSync(zip, { force: true });
 execFileSync("ditto", ["-c", "-k", "--keepParent", app, zip], { stdio: "inherit" });
 console.log(`Built ${zip} (${packaged.map((entry) => entry.arch).join(", ")})`);
@@ -104,17 +104,17 @@ function infoPlistText() {
   <key>CFBundleDevelopmentRegion</key>
   <string>en</string>
   <key>CFBundleExecutable</key>
-  <string>Automatic Project Map</string>
+  <string>Contour</string>
   <key>CFBundleIconFile</key>
   <string></string>
   <key>CFBundleIdentifier</key>
-  <string>app.automaticprojectmap.helper</string>
+  <string>app.contour.helper</string>
   <key>CFBundleInfoDictionaryVersion</key>
   <string>6.0</string>
   <key>CFBundleName</key>
-  <string>Automatic Project Map</string>
+  <string>Contour</string>
   <key>CFBundleDisplayName</key>
-  <string>Automatic Project Map</string>
+  <string>Contour</string>
   <key>CFBundlePackageType</key>
   <string>APPL</string>
   <key>CFBundleShortVersionString</key>

@@ -8,7 +8,7 @@ import ServiceManagement
 
 private let stagingMap = URL(string: "https://automatic-project-map-staging.vercel.app")!
 private let helperURL = URL(string: "http://127.0.0.1:47321")!
-private let appSupportName = "Automatic Project Map"
+private let appSupportName = "Contour"
 private let delegate = AppDelegate()
 
 @main
@@ -123,8 +123,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
       return false
     }
     let current = Bundle.main.bundleURL.standardizedFileURL
-    let userApps = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Applications/Automatic Project Map.app")
-    let systemApps = URL(fileURLWithPath: "/Applications/Automatic Project Map.app").standardizedFileURL
+    let userApps = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Applications/Contour.app")
+    let systemApps = URL(fileURLWithPath: "/Applications/Contour.app").standardizedFileURL
     if current == userApps.standardizedFileURL || current == systemApps {
       return false
     }
@@ -341,7 +341,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
       symbol = "map"
     }
     guard let button = statusItem?.button else { return }
-    if let image = NSImage(systemSymbolName: symbol, accessibilityDescription: "Automatic Project Map") {
+    if let image = NSImage(systemSymbolName: symbol, accessibilityDescription: "Contour") {
       image.isTemplate = true
       button.image = image
       button.title = ""

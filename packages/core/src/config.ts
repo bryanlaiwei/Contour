@@ -58,7 +58,7 @@ function repoEnvPath(): string {
 }
 
 function isRepoPackage(value: unknown): boolean {
-  return typeof value === "object" && value !== null && "name" in value && value.name === "automatic-project-map";
+  return typeof value === "object" && value !== null && "name" in value && value.name === "contour";
 }
 
 function text(env: NodeJS.ProcessEnv, key: string): string | null {

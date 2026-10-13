@@ -9,7 +9,7 @@ describe("staging helper download", () => {
     expect(macHelperDownloadNote).toBe(
       "Paste this in Terminal. It downloads the app and opens it. Allow folder access, then come back and click Connect this computer.",
     );
-    expect(macHelperInstallCommand).toContain(`curl -fsSL -o /tmp/Automatic-Project-Map-Mac.zip ${stagingMacHelperDownloadUrl}`);
-    expect(macHelperInstallCommand).toContain('open "$HOME/Applications/Automatic Project Map.app"');
+    expect(macHelperInstallCommand).toContain(`curl -fsSL -o /tmp/Contour-Mac.zip ${stagingMacHelperDownloadUrl}`);
+    expect(macHelperInstallCommand).toContain('open "$HOME/Applications/Contour.app"');
   });
 });

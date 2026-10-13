@@ -3,10 +3,10 @@
 export const stagingWebOrigin = "https://automatic-project-map-staging.vercel.app";
 
 export const stagingMacHelperDownloadUrl =
-  "https://github.com/bryanlaiwei/automatic-project-map/releases/download/mac-helper-staging-1/Automatic-Project-Map-Mac.zip";
+  "https://github.com/bryanlaiwei/Contour/releases/download/mac-helper-staging-1/Contour-Mac.zip";
 
 /** curl does not mark the app as a browser download, so Gatekeeper does not block it. */
-export const macHelperInstallCommand = `mkdir -p "$HOME/Applications" && curl -fsSL -o /tmp/Automatic-Project-Map-Mac.zip ${stagingMacHelperDownloadUrl} && rm -rf "$HOME/Applications/Automatic Project Map.app" && ditto -xk /tmp/Automatic-Project-Map-Mac.zip "$HOME/Applications" && open "$HOME/Applications/Automatic Project Map.app"`;
+export const macHelperInstallCommand = `mkdir -p "$HOME/Applications" && curl -fsSL -o /tmp/Contour-Mac.zip ${stagingMacHelperDownloadUrl} && rm -rf "$HOME/Applications/Contour.app" && ditto -xk /tmp/Contour-Mac.zip "$HOME/Applications" && open "$HOME/Applications/Contour.app"`;
 
 export const macHelperDownloadNote =
   "Paste this in Terminal. It downloads the app and opens it. Allow folder access, then come back and click Connect this computer.";
