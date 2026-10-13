@@ -1,15 +1,15 @@
-// Staging menu-bar entry. It forces the staging site, then runs the same helper as npm run dev:helper.
+// Menu-bar entry. It forces the hosted site, then runs the same helper as npm run dev:helper.
 // Collection, upload, and pairing stay in the local collector.
 
 import { mkdirSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
-import { stagingWebOrigin } from "@apm/shared";
+import { macHelperSiteOrigin } from "@apm/shared";
 import { runCli } from "../cli.js";
 
 const support = join(homedir(), "Library", "Application Support", "Contour");
 mkdirSync(support, { recursive: true });
-process.env.WEB_ORIGIN = stagingWebOrigin;
+process.env.WEB_ORIGIN = macHelperSiteOrigin;
 process.env.APM_HELPER_STRICT_ORIGIN = "1";
 process.env.APM_HELPER_DB = join(support, "collector.sqlite");
 

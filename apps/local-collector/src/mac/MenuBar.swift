@@ -1,4 +1,4 @@
-// Menu bar for the staging helper. There is no window: the map stays on the website.
+// Menu bar for the local helper. There is no window: the map stays on the website.
 // Pause stops collection. Quit stops the process. The next login starts it again.
 
 import AppKit
@@ -6,7 +6,8 @@ import Darwin
 import Foundation
 import ServiceManagement
 
-private let stagingMap = URL(string: "https://automatic-project-map-staging.vercel.app")!
+// Keep in step with macHelperSiteOrigin in packages/shared/src/mac-helper.ts.
+private let siteMap = URL(string: "https://contourmaps.vercel.app")!
 private let helperURL = URL(string: "http://127.0.0.1:47321")!
 private let appSupportName = "Contour"
 private let delegate = AppDelegate()
@@ -204,7 +205,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     process.arguments = [resources.appendingPathComponent("collector/main.cjs").path, "serve"]
     process.currentDirectoryURL = appSupportURL()
     var environment = ProcessInfo.processInfo.environment
-    environment["WEB_ORIGIN"] = stagingMap.absoluteString
+    environment["WEB_ORIGIN"] = siteMap.absoluteString
     environment["APM_HELPER_STRICT_ORIGIN"] = "1"
     process.environment = environment
     let input = Pipe()
@@ -372,7 +373,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
   }
 
   @objc private func openMap() {
-    NSWorkspace.shared.open(stagingMap)
+    NSWorkspace.shared.open(siteMap)
   }
 
   @objc private func allowFolderAccess() {

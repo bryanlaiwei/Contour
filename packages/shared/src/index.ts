@@ -13,11 +13,11 @@ export type { ExclusionReason, SessionEligibility } from "./logic/session-eligib
 export { folderMatchesRoot, matchingRoot, normalizeAbsolutePath } from "./logic/selected-folders.js";
 export {
   macHelperDownloadNote,
+  macHelperDownloadUrl,
   macHelperInstallCommand,
+  macHelperSiteOrigin,
   offerMacHelperDownload,
-  stagingMacHelperDownloadUrl,
-  stagingWebOrigin,
-} from "./staging-helper.js";
+} from "./mac-helper.js";
 // sessionContentEventId is @apm/shared/session-content-id. It uses node:crypto, which the browser cannot load.
 export {
   acceptedInvitationSchema,
