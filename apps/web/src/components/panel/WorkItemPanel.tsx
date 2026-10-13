@@ -53,6 +53,7 @@ export function WorkItemPanel({
   onChanged,
   onGone,
   viewerLogin,
+  local,
 }: {
   token: string;
   projectId: string;
@@ -63,10 +64,23 @@ export function WorkItemPanel({
   onChanged: () => Promise<void>;
   onGone: () => void;
   viewerLogin: string | null;
+  /** Sample map on the signed-out page. The signed-in map keeps using the API. */
+  local?: {
+    item: WorkItemDetail;
+    rename: (title: string) => Promise<void>;
+    move: (featureId: string) => Promise<void>;
+    merge: (survivingId: string) => Promise<void>;
+    split: (input: { title: string; evidenceIds: string[]; artifactIds: string[] }) => Promise<string | null>;
+    dismiss: (relationshipId: string) => Promise<void>;
+  };
 }) {
   const toast = useToast();
   const [dialog, setDialog] = useState<DialogKind>(null);
-  const { data, error, missing, loading } = useDetail(() => api.workItem(token, projectId, workItemId), workItemId, graph.revision);
+  const { data, error, missing, loading } = useDetail(
+    () => (local ? Promise.resolve({ revision: graph.revision, workItem: local.item }) : api.workItem(token, projectId, workItemId)),
+    workItemId,
+    graph.revision,
+  );
   const item = data?.workItem;
 
   useEffect(() => {
@@ -129,7 +143,11 @@ export function WorkItemPanel({
           value={item.title.value}
           className="mt-1 text-xl leading-snug font-semibold text-zinc-900"
           onSave={async (title) => {
-            await api.correct(token, projectId, { kind: "rename", target: "work_item", id: item.id, title });
+            if (local) {
+              await local.rename(title);
+            } else {
+              await api.correct(token, projectId, { kind: "rename", target: "work_item", id: item.id, title });
+            }
             await onChanged();
             toast("Work item renamed");
           }}
@@ -216,7 +234,11 @@ export function WorkItemPanel({
           currentFeatureId={item.feature.id}
           features={graph.features}
           onMove={async (featureId) => {
-            await api.correct(token, projectId, { kind: "move", workItemId: item.id, featureId });
+            if (local) {
+              await local.move(featureId);
+            } else {
+              await api.correct(token, projectId, { kind: "move", workItemId: item.id, featureId });
+            }
             await onChanged();
             toast(`Moved to “${featureTitle(featureId) ?? "feature"}”`);
           }}
@@ -229,7 +251,11 @@ export function WorkItemPanel({
           current={{ id: item.id, title: item.title.value }}
           features={graph.features}
           onMerge={async (survivingId) => {
-            await api.correct(token, projectId, { kind: "merge", target: "work_item", retiredId: item.id, survivingId });
+            if (local) {
+              await local.merge(survivingId);
+            } else {
+              await api.correct(token, projectId, { kind: "merge", target: "work_item", retiredId: item.id, survivingId });
+            }
             onSelectWorkItem(survivingId);
             await onChanged();
             toast("Work items merged");
@@ -242,10 +268,12 @@ export function WorkItemPanel({
           onClose={() => setDialog(null)}
           detail={item}
           onSplit={async (input) => {
-            const result = await api.correct(token, projectId, { kind: "split", workItemId: item.id, ...input });
+            const created = local
+              ? await local.split(input)
+              : (await api.correct(token, projectId, { kind: "split", workItemId: item.id, ...input })).createdWorkItemId;
             await onChanged();
-            if (result.createdWorkItemId) {
-              onSelectWorkItem(result.createdWorkItemId);
+            if (created) {
+              onSelectWorkItem(created);
             }
             toast("Split into a new work item");
           }}
@@ -264,7 +292,11 @@ export function WorkItemPanel({
           }
           confirmLabel="Remove dependency"
           onConfirm={async () => {
-            await api.correct(token, projectId, { kind: "dismiss", relationshipId: dismissing.id });
+            if (local) {
+              await local.dismiss(dismissing.id);
+            } else {
+              await api.correct(token, projectId, { kind: "dismiss", relationshipId: dismissing.id });
+            }
             await onChanged();
             toast("Dependency removed");
           }}
