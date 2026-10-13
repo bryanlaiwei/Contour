@@ -6,10 +6,9 @@ export default defineRailway((ctx) => {
   const hosted = {
     build: "npm run build:server",
     start: "npm run start:hosted",
-    replicas: { iad: 1 },
   };
-  const api = service("api", hosted);
-  const worker = service("worker", hosted);
+  const api = service("api", { ...hosted, replicas: { iad: 1 } });
+  const worker = service("worker", { ...hosted, replicas: { iad: 2 } });
 
   return project(ctx.projectName, {
     variables: { managed: false },
