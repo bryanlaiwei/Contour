@@ -35,7 +35,7 @@ export function SignIn({ onSignIn }: { onSignIn: () => Promise<string | null> })
               <StepIndex>1</StepIndex>
               <h3 className="mt-3 text-base font-semibold text-zinc-900">Install the local helper</h3>
               <p className="mt-1 text-sm leading-relaxed text-zinc-600">
-                Paste this in Terminal on your Mac. Allow folder access, then connect this computer in Settings → Local helper after you sign in.
+                Paste this in Mac Terminal. Allow folder access, then connect this computer in Settings → Local helper after you sign in.
               </p>
               <div className="mt-auto pt-5">
                 <MacHelperDownload />
