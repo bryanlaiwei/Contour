@@ -23,7 +23,7 @@ supabase/.branches/
 .DS_Store
 .vercel/
 .railway/
-apps/local-collector/mac/.cache/
+apps/local-collector/src/mac/.cache/
 .idea/
 .vscode/
 *.log

@@ -10,7 +10,7 @@ This repository is the TypeScript workspace for Contour: a React web app, an Exp
 |---|---|
 | `apps/api` | Express HTTP routes |
 | `apps/github-collector` | GitHub webhook normalization, enrichment, and refresh |
-| `apps/local-collector` | Local helper. The Mac menu-bar app is `mac/` |
+| `apps/local-collector` | Local helper. The Mac menu-bar app is `src/mac/` |
 | `apps/web` | React map |
 | `apps/worker` | Background jobs that turn stored events into the map |
 | `packages/core` | Database, map processing, and other logic shared by the API and the worker |

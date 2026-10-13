@@ -6,8 +6,8 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "start": "tsx src/index.ts",
-    "build:mac": "node mac/build.mjs",
-    "typecheck": "tsc --noEmit && tsc --noEmit -p mac/tsconfig.json",
+    "build:mac": "node src/mac/build.mjs",
+    "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },
   "dependencies": {

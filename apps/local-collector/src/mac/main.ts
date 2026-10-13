@@ -5,7 +5,7 @@ import { mkdirSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { stagingWebOrigin } from "@apm/shared";
-import { runCli } from "../src/cli.js";
+import { runCli } from "../cli.js";
 
 const support = join(homedir(), "Library", "Application Support", "Contour");
 mkdirSync(support, { recursive: true });

@@ -7,7 +7,13 @@ import tailwindcss from "@tailwindcss/vite";
 const root = dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
+  root: "src",
   envDir: resolve(root, "../.."),
+  publicDir: false,
+  build: {
+    outDir: "../dist",
+    emptyOutDir: true,
+  },
   plugins: [react(), tailwindcss()],
   server: {
     host: "127.0.0.1",
