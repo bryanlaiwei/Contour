@@ -36,7 +36,7 @@ flowchart TD
 - `src/app.ts` is the HTTP server: sign-in, connect a repository, pair a helper, upload events, receive webhooks, and mount the map and settings routes.
 - `src/require-access.ts` is the middleware that checks project membership before a route runs.
 - `src/auth.ts` checks a Supabase access token locally with the project's JWT secret and returns the signed-in user.
-- `src/workspace-routes.ts` serves the settings HTTP routes for members, invitations, devices, and layout.
-- `src/graph/routes.ts` serves the map, a work item, a feature, and a correction.
+- `src/routes/workspace.ts` serves the settings HTTP routes for members, invitations, devices, and layout.
+- `src/routes/graph.ts` serves the map, a work item, a feature, and a correction.
 
 The files that used to live beside these routes — the database pool, stored events, the webhook job queue, membership, model keys, and map processing — are in `packages/core`.

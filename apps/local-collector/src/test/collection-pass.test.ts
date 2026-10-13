@@ -2,7 +2,7 @@ import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from "nod
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { ChangeTracker } from "../change-tracker.js";
+import { ChangeTracker } from "../logs/change-tracker.js";
 import { runCollectionPass } from "../collection-pass.js";
 import { LocalDb } from "../local-db.js";
 import { flushOutbox, type EventUploadTransport } from "../upload-outbox.js";

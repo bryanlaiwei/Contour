@@ -27,8 +27,7 @@ flowchart TD
 - `src/App.tsx` holds the session, loads projects, and shows sign-in, onboarding, or the workspace.
 - `src/api.ts` calls the API and the local helper on this computer.
 - `src/supabase.ts` creates the Supabase client used for sign-in.
-- `src/components/Workspace.tsx` is the map, the side panel, and settings.
-- `src/components/map/` draws the feature map.
-- `src/components/panel/` shows one feature or work item.
-- `src/components/settings/SettingsDialog.tsx` is project settings, including pairing the local helper.
-- `src/components/corrections/Dialogs.tsx` covers rename, move, merge, and split.
+- `src/pages/` is sign-in, onboarding, the workspace, and settings.
+- `src/map/` draws the feature map.
+- `src/panel/` shows one feature or work item, including corrections.
+- `src/ui/` is the shared buttons, marks, and toasts.

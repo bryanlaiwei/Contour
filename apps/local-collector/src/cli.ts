@@ -4,7 +4,7 @@
 import { CollectorLoop, applyLogRootOverrides, defaultLogRoots, defaultScanIntervalMs, describeLogRoots } from "./collector-loop.js";
 import type { LogRoots } from "./collection-pass.js";
 import type { SessionAgentId } from "./contract/adapter.js";
-import { readLogAccess } from "./log-access.js";
+import { readLogAccess } from "./logs/log-access.js";
 import { startLocalServer } from "./local-server.js";
 import { LocalDb } from "./local-db.js";
 import { collectSession } from "./parse-file.js";

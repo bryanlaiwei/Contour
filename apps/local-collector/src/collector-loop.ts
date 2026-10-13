@@ -3,7 +3,7 @@
 
 import { homedir } from "node:os";
 import { agents } from "./agents.js";
-import { ChangeTracker } from "./change-tracker.js";
+import { ChangeTracker } from "./logs/change-tracker.js";
 import { runCollectionPass, type LogRoots } from "./collection-pass.js";
 import { createFetchEventTransport, flushOutbox, type EventUploadTransport } from "./upload-outbox.js";
 import type { LocalDb, PairingRecord } from "./local-db.js";

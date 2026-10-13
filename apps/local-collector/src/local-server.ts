@@ -9,7 +9,7 @@ import { agents } from "./agents.js";
 import type { LogRoots } from "./collection-pass.js";
 import { applyLogRootOverrides, type CollectorStatus } from "./collector-loop.js";
 import type { SessionAgentId } from "./contract/adapter.js";
-import type { LogAccess } from "./log-access.js";
+import type { LogAccess } from "./logs/log-access.js";
 import { LocalDb, type PairingRecord } from "./local-db.js";
 
 const defaultPort = 47321;

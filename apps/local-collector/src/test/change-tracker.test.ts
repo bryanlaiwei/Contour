@@ -2,7 +2,7 @@ import { appendFileSync, mkdtempSync, realpathSync, rmSync, utimesSync, writeFil
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { ChangeTracker } from "../change-tracker.js";
+import { ChangeTracker } from "../logs/change-tracker.js";
 
 const temps: string[] = [];
 
