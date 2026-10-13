@@ -99,17 +99,17 @@ export function SettingsDialog({
         aria-label="Settings"
         data-settings
         onMouseDown={(event) => event.stopPropagation()}
-        className="animate-in flex h-[min(760px,88vh)] w-full max-w-3xl overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-zinc-200"
+        className="animate-in flex h-[min(760px,88vh)] w-full min-w-0 max-w-3xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-zinc-200 sm:flex-row"
       >
-        <nav className="flex w-48 shrink-0 flex-col gap-0.5 border-r border-zinc-100 bg-zinc-50/60 p-3">
-          <p className="px-2.5 pt-1 pb-3 text-sm font-semibold text-zinc-900">Settings</p>
+        <nav className="flex w-full shrink-0 flex-wrap items-center gap-1.5 border-b border-zinc-100 bg-zinc-50/60 p-2.5 sm:w-48 sm:flex-col sm:flex-nowrap sm:items-stretch sm:gap-0.5 sm:border-r sm:border-b-0 sm:p-3">
+          <p className="hidden px-2.5 pt-1 pb-3 text-sm font-semibold text-zinc-900 sm:block">Settings</p>
           {visibleTabs.map((entry) => (
             <button
               key={entry.id}
               type="button"
               onClick={() => onTab(entry.id)}
               className={cx(
-                "flex items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm transition-colors",
+                "flex min-h-10 items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm transition-colors",
                 tab === entry.id ? "bg-white font-medium text-zinc-900 shadow-sm ring-1 ring-zinc-200" : "text-zinc-600 hover:bg-white/70 hover:text-zinc-900",
               )}
             >
@@ -118,14 +118,14 @@ export function SettingsDialog({
             </button>
           ))}
         </nav>
-        <div className="flex min-w-0 flex-1 flex-col">
-          <div className="flex h-14 shrink-0 items-center justify-between border-b border-zinc-100 pr-3 pl-6">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+          <div className="flex h-14 shrink-0 items-center justify-between border-b border-zinc-100 px-4 sm:px-6">
             <h2 className="text-base font-semibold text-zinc-900">{visibleTabs.find((entry) => entry.id === tab)?.label}</h2>
             <IconButton label="Close settings" onClick={onClose}>
               <X className="size-4" />
             </IconButton>
           </div>
-          <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">
+          <div className="min-h-0 min-w-0 flex-1 overflow-y-auto px-4 py-5 sm:px-6">
             {error ? <ErrorNote>{error}</ErrorNote> : null}
             {!settings && !error ? (
               <div className="flex h-40 items-center justify-center">
@@ -150,9 +150,9 @@ export function SettingsDialog({
 
 function Row({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="flex items-start justify-between gap-6 border-b border-zinc-100 py-3.5 last:border-0">
+    <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-1 border-b border-zinc-100 py-3.5 last:border-0">
       <span className="text-sm text-zinc-500">{label}</span>
-      <span className="text-right text-sm text-zinc-900">{children}</span>
+      <span className="min-w-0 text-right text-sm break-words text-zinc-900">{children}</span>
     </div>
   );
 }
@@ -238,8 +238,8 @@ function MembersTab({ token, settings, reload, onLeft }: { token: string; settin
           <label className="block text-sm font-medium text-zinc-800" htmlFor="invite-login">
             Invite a teammate
           </label>
-          <div className="flex gap-2">
-            <div className="relative flex-1">
+          <div className="flex flex-wrap gap-2">
+            <div className="relative min-w-0 flex-1 basis-48">
               <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-sm text-zinc-400">@</span>
               <input
                 id="invite-login"
@@ -263,9 +263,9 @@ function MembersTab({ token, settings, reload, onLeft }: { token: string; settin
         <h3 className="mb-2 text-xs font-semibold tracking-wide text-zinc-500 uppercase">People</h3>
         <ul className="divide-y divide-zinc-100 rounded-xl ring-1 ring-zinc-200">
           {settings.members.map((member) => (
-            <li key={member.userId} className="flex items-center gap-3 px-3.5 py-3">
+            <li key={member.userId} className="flex flex-col items-start gap-2 px-3.5 py-3 sm:flex-row sm:items-center sm:gap-3">
               {member.githubLogin ? <Avatar login={member.githubLogin} src={member.avatarUrl} size={32} /> : <span className="size-8 rounded-full bg-zinc-200" />}
-              <div className="min-w-0 flex-1">
+              <div className="min-w-0 grow basis-40">
                 <p className="truncate text-sm font-medium text-zinc-900">
                   {member.name ?? (member.githubLogin ? `@${member.githubLogin}` : "Unknown member")}
                   {member.you ? <span className="ml-1.5 text-xs font-normal text-zinc-400">(you)</span> : null}
@@ -297,9 +297,9 @@ function MembersTab({ token, settings, reload, onLeft }: { token: string; settin
           <h3 className="mb-2 text-xs font-semibold tracking-wide text-zinc-500 uppercase">Waiting to accept</h3>
           <ul className="divide-y divide-zinc-100 rounded-xl ring-1 ring-zinc-200">
             {settings.invitations.map((invitation) => (
-              <li key={invitation.id} className="flex items-center gap-3 px-3.5 py-2.5">
+              <li key={invitation.id} className="flex flex-col items-start gap-2 px-3.5 py-2.5 sm:flex-row sm:items-center sm:gap-3">
                 <Avatar login={invitation.githubLogin} size={28} />
-                <div className="min-w-0 flex-1">
+                <div className="min-w-0 grow basis-40">
                   <p className="truncate text-sm font-medium text-zinc-900">@{invitation.githubLogin}</p>
                   <p className="truncate text-xs text-zinc-500">
                     Invited {invitation.invitedBy ? `by @${invitation.invitedBy} ` : ""}
@@ -475,13 +475,13 @@ function HelperTab({ token, settings, reload }: { token: string; settings: Proje
                           ? "Connected. Add the folder where you work on this project so sessions are collected."
                           : `${folderCount} folder${folderCount === 1 ? "" : "s"} selected · last upload ${timeAgo(here.lastUploadAt, now)}${here.queued > 0 ? ` · ${here.queued} waiting` : ""}`}
             </p>
-            {here?.lastError && !here.needsPairing ? <p className="mt-1 text-xs text-rose-600">{here.lastError}</p> : null}
-            <div className="mt-3 flex flex-wrap gap-2">
-              <Button size="sm" variant={connected ? "secondary" : "primary"} className="shrink-0 whitespace-nowrap" loading={connecting} onClick={() => void connect()}>
+            {here?.lastError && !here.needsPairing ? <p className="mt-1 text-xs break-words text-rose-600">{here.lastError}</p> : null}
+            <div className="mt-3 flex flex-col items-start gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+              <Button size="sm" variant={connected ? "secondary" : "primary"} loading={connecting} onClick={() => void connect()}>
                 {here ? "Reconnect" : "Connect this computer"}
               </Button>
               {here ? (
-                <Button size="sm" variant="ghost" className="shrink-0 whitespace-nowrap" loading={disconnecting} onClick={() => void disconnectHere()}>
+                <Button size="sm" variant="ghost" className="-ml-2.5 sm:ml-0" loading={disconnecting} onClick={() => void disconnectHere()}>
                   Disconnect this computer
                 </Button>
               ) : null}
@@ -509,7 +509,7 @@ function HelperTab({ token, settings, reload }: { token: string; settings: Proje
               ))}
             </ul>
           ) : null}
-          <form className="mt-3 flex items-center gap-2" onSubmit={(event) => void addFolder(event)}>
+          <form className="mt-3 flex flex-col items-start gap-2 sm:flex-row sm:items-center" onSubmit={(event) => void addFolder(event)}>
             <input
               name="path"
               required
@@ -517,9 +517,9 @@ function HelperTab({ token, settings, reload }: { token: string; settings: Proje
               placeholder="/path/to/your/clone"
               aria-label="Folder for this project"
               autoFocus={folderCount === 0}
-              className={cx(inputClass, "min-w-0 flex-1 font-mono text-xs")}
+              className={cx(inputClass, "min-w-0 font-mono text-xs sm:flex-1")}
             />
-            <Button type="submit" variant={folderCount === 0 ? "primary" : "secondary"} className="shrink-0 whitespace-nowrap" loading={adding}>
+            <Button type="submit" variant={folderCount === 0 ? "primary" : "secondary"} className="self-end sm:self-auto" loading={adding}>
               Add folder
             </Button>
           </form>
@@ -548,21 +548,24 @@ function HelperTab({ token, settings, reload }: { token: string; settings: Proje
         ) : (
           <ul className="divide-y divide-zinc-100 rounded-xl ring-1 ring-zinc-200">
             {settings.devices.map((device) => (
-              <li key={device.id} className="flex items-center gap-3 px-3.5 py-3">
-                <Laptop className="size-5 shrink-0 text-zinc-400" />
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-zinc-900">
-                    {device.label}
-                    {device.pairedBy ? <span className="font-normal text-zinc-500"> · @{device.pairedBy}</span> : null}
-                  </p>
-                  <p className="text-xs text-zinc-500">
-                    {device.lastSeenAt ? `Last seen ${timeAgo(device.lastSeenAt, now)}` : "Not seen since connecting"} · connected {timeAgo(device.createdAt, now)}
-                  </p>
+              <li key={device.id} className="flex flex-col items-start gap-1 px-3.5 py-3 sm:flex-row sm:items-center sm:gap-3">
+                <div className="flex min-w-0 items-start gap-3 sm:flex-1">
+                  <Laptop className="mt-0.5 size-5 shrink-0 text-zinc-400" />
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium break-words text-zinc-900">
+                      {device.label}
+                      {device.pairedBy ? <span className="font-normal text-zinc-500"> · @{device.pairedBy}</span> : null}
+                    </p>
+                    <p className="text-xs text-zinc-500">
+                      {device.lastSeenAt ? `Last seen ${timeAgo(device.lastSeenAt, now)}` : "Not seen since connecting"} · connected {timeAgo(device.createdAt, now)}
+                    </p>
+                  </div>
                 </div>
                 {device.yours || settings.role === "owner" ? (
                   <Button
                     size="sm"
                     variant="ghost"
+                    className="self-end sm:self-auto"
                     onClick={() =>
                       void api
                         .revokeDevice(token, settings.project.id, device.id)
@@ -583,11 +586,26 @@ function HelperTab({ token, settings, reload }: { token: string; settings: Proje
   );
 }
 
+function FolderPath({ path }: { path: string }) {
+  const segments = path.split("/");
+  return (
+    <p title={path} className="min-w-0 font-mono text-xs leading-5 text-zinc-700 sm:flex-1 sm:truncate">
+      {segments.map((segment, index) => (
+        <span key={`${index}-${segment}`}>
+          {index > 0 ? "/" : ""}
+          {segment}
+          {index < segments.length - 1 ? <wbr /> : null}
+        </span>
+      ))}
+    </p>
+  );
+}
+
 function HelperFolderRow({ folder, removing, onRemove }: { folder: HelperFolder; removing: boolean; onRemove: () => Promise<boolean> }) {
   return (
-    <li className="flex items-center gap-3 px-3.5 py-2.5">
-      <p className="min-w-0 flex-1 font-mono text-xs break-all text-zinc-700">{folder.canonicalPath}</p>
-      <Button size="sm" variant="ghost" loading={removing} onClick={() => void onRemove()}>
+    <li className="flex flex-col items-start gap-1 px-3.5 py-2.5 sm:flex-row sm:items-center sm:gap-3">
+      <FolderPath path={folder.canonicalPath} />
+      <Button size="sm" variant="ghost" className="self-end sm:self-auto" loading={removing} onClick={() => void onRemove()}>
         Remove
       </Button>
     </li>
@@ -600,9 +618,9 @@ function PausedSessions({ project }: { project: HelperProjectStatus }) {
       <p className="text-sm text-zinc-600">Paused sessions. Their log file was replaced or shortened.</p>
       <ul className="mt-2 space-y-1.5">
         {project.paused.map((item) => (
-          <li key={`${item.provider}:${item.sessionId}`} className="flex items-center gap-2 text-sm text-zinc-700">
+          <li key={`${item.provider}:${item.sessionId}`} className="flex min-w-0 flex-wrap items-center gap-2 text-sm text-zinc-700">
             <AgentBadge source={item.provider} size={18} />
-            <span className="font-mono text-xs">{item.sessionId}</span>
+            <span className="min-w-0 font-mono text-xs break-all">{item.sessionId}</span>
             <span className="text-xs text-zinc-500">{item.reason ?? "paused"}</span>
           </li>
         ))}
@@ -654,7 +672,6 @@ function CollectionSection({
   }
   const rows: Array<[string, string]> = status
     ? [
-        ["Last scan", status.lastScanAt ? formatDateTime(status.lastScanAt) : "Not yet"],
         ["Last upload", status.lastUploadAt ? formatDateTime(status.lastUploadAt) : "Not yet"],
         ["Waiting to upload", String(status.queued)],
         ["Uploaded since start", String(status.uploaded)],
@@ -668,14 +685,7 @@ function CollectionSection({
   return (
     <div>
       <div className="mb-3">
-        <div className="flex items-center justify-between gap-3">
-          <h3 className="text-xs font-semibold tracking-wide text-zinc-500 uppercase">Agent logs</h3>
-          {status ? (
-            <Button size="sm" className="shrink-0 whitespace-nowrap" loading={scanning} onClick={onScan}>
-              Scan now
-            </Button>
-          ) : null}
-        </div>
+        <h3 className="text-xs font-semibold tracking-wide text-zinc-500 uppercase">Agent logs</h3>
         <p className="mt-1.5 text-sm leading-relaxed text-zinc-500">
           Where each agent writes its sessions. Each path starts as the default. Counts are for every project on this computer.
         </p>
@@ -694,18 +704,18 @@ function CollectionSection({
                   <p className="text-sm font-medium text-zinc-900">{agentLabel(root.id)}</p>
                   <span className="text-xs text-zinc-400">{root.custom ? "Custom" : "Default"}</span>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center">
                   <input
                     value={value}
                     spellCheck={false}
                     aria-label={`${agentLabel(root.id)} session folder`}
                     onChange={(event) => setDrafts((current) => ({ ...current, [root.id]: event.target.value }))}
-                    className={cx(inputClass, "min-w-0 flex-1 font-mono text-xs")}
+                    className={cx(inputClass, "min-w-0 font-mono text-xs sm:flex-1")}
                   />
                   <Button
                     type="button"
                     variant={dirty ? "primary" : "secondary"}
-                    className="shrink-0 whitespace-nowrap"
+                    className="self-end sm:self-auto"
                     disabled={!dirty || value.trim() === ""}
                     loading={savingId === root.id}
                     onClick={() => void save(root.id, value.trim())}
@@ -728,15 +738,26 @@ function CollectionSection({
           })}
         </ul>
       )}
-      {rows.length > 0 ? (
-        <dl className="mt-3 divide-y divide-zinc-100 rounded-xl ring-1 ring-zinc-200">
-          {rows.map(([label, value]) => (
-            <div key={label} className="flex items-center justify-between gap-4 px-3.5 py-2.5">
-              <dt className="text-sm text-zinc-500">{label}</dt>
-              <dd className="text-right text-sm text-zinc-900">{value}</dd>
+      {status ? (
+        <div className="mt-3 overflow-hidden rounded-xl ring-1 ring-zinc-200">
+          <dl className="divide-y divide-zinc-100">
+            <div className="flex flex-wrap items-center justify-end gap-x-2 gap-y-1 px-3.5 py-1.5">
+              <dt className="mr-auto text-sm text-zinc-500">Last scan</dt>
+              <dd className="contents">
+                <span className="text-sm whitespace-nowrap text-zinc-900 tabular-nums">{status.lastScanAt ? formatDateTime(status.lastScanAt) : "Not yet"}</span>
+                <Button size="sm" variant="ghost" className="-mr-2" loading={scanning} onClick={onScan}>
+                  Scan now
+                </Button>
+              </dd>
             </div>
-          ))}
-        </dl>
+            {rows.map(([label, value]) => (
+              <div key={label} className="flex flex-wrap items-baseline justify-end gap-x-4 gap-y-0.5 px-3.5 py-2.5">
+                <dt className="mr-auto text-sm text-zinc-500">{label}</dt>
+                <dd className="text-sm whitespace-nowrap text-zinc-900 tabular-nums">{value}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
       ) : null}
     </div>
   );
@@ -981,8 +1002,8 @@ function ModelTab({ token, reload }: { token: string; reload: () => Promise<void
           : " If no owner has saved a key, analysis waits until one is added."}
       </p>
       {setup?.credential ? (
-        <div className="flex items-start justify-between gap-4 rounded-xl p-4 ring-1 ring-zinc-200">
-          <div>
+        <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2 rounded-xl p-4 ring-1 ring-zinc-200">
+          <div className="min-w-0 flex-1 basis-40">
             <p className="text-sm font-medium text-zinc-900">
               {providerLabel(setup.credential.provider)}
               <span className="font-normal text-zinc-500"> · key ending in {setup.credential.hint}</span>

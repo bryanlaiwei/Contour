@@ -23,6 +23,7 @@ import { cx } from "../helpers";
 import { IconButton } from "../ui";
 import { MapActionsContext, type MapActions } from "./actions";
 import { FeatureNode, type FeatureFlowNode } from "./FeatureNode";
+import { Disclosure } from "./Disclosure";
 import { cardWidth, collapsedHeight, displayPositions, featureEdges, type XY } from "./layout";
 
 const panelSpace = 464;
@@ -234,18 +235,18 @@ function MapCanvasInner({
         >
           <Background variant={BackgroundVariant.Dots} gap={24} size={1.15} color="#e4e4e7" />
           <Panel position="top-right" style={{ marginTop: 16, marginRight: panelOpen ? 468 : 16 }}>
-            <div className="w-max max-w-72 rounded-xl bg-white shadow-sm ring-1 ring-zinc-200">
+            <div className="relative w-max">
               <button
                 type="button"
                 aria-expanded={legendOpen}
                 onClick={() => setLegendOpen((open) => !open)}
-                className="flex w-full items-center gap-1.5 px-2.5 py-1.5 text-left text-xs font-medium text-zinc-700"
+                className="flex items-center gap-1.5 rounded-xl bg-white px-2.5 py-1.5 text-left text-xs font-medium text-zinc-700 shadow-sm ring-1 ring-zinc-200"
               >
-                <span>Status</span>
-                <ChevronDown className={cx("size-3.5 text-zinc-400 transition-transform", legendOpen && "rotate-180")} />
+                <span>Legend</span>
+                <ChevronDown className={cx("size-3.5 text-zinc-400 transition-transform duration-200 ease-out", legendOpen && "rotate-180")} />
               </button>
-              {legendOpen ? (
-                <ul className="space-y-2 px-2.5 pb-2.5">
+              <Disclosure open={legendOpen} className="absolute top-full right-0 z-10 mt-1 w-max max-w-72 rounded-xl bg-white shadow-sm ring-1 ring-zinc-200">
+                <ul className="w-max max-w-72 space-y-2 px-2.5 py-2.5">
                   {(Object.keys(legendDetail) as WorkItemState[]).map((state) => (
                     <li key={state} className="flex items-start gap-2 text-xs text-zinc-600">
                       <span className={cx("mt-1 size-2 shrink-0 rounded-full", stateMeta[state].dot)} />
@@ -255,7 +256,7 @@ function MapCanvasInner({
                     </li>
                   ))}
                 </ul>
-              ) : null}
+              </Disclosure>
             </div>
           </Panel>
           <Panel position="bottom-left" className="!m-4">

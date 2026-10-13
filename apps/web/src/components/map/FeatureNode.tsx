@@ -7,6 +7,7 @@ import { describeCounts } from "../../format";
 import { cx } from "../helpers";
 import { ContributorStack, StateBar, StateDot } from "../ui";
 import { MapActionsContext } from "./actions";
+import { Disclosure } from "./Disclosure";
 import { cardWidth, collapsedHeight, maxRows, rowHeight } from "./layout";
 
 export type FeatureNodeData = {
@@ -59,7 +60,7 @@ function FeatureNodeView({ data }: NodeProps<FeatureFlowNode>) {
           <h3 className="line-clamp-2 min-w-0 flex-1 text-[15px] leading-snug font-semibold text-zinc-900">{feature.title}</h3>
           <div className="flex shrink-0 items-center gap-1.5 pt-px">
             <ContributorStack contributors={feature.contributors} max={3} size={18} />
-            <ChevronDown className={cx("size-4 text-zinc-400 transition-transform duration-200", expanded && "rotate-180")} aria-hidden />
+            <ChevronDown className={cx("size-4 text-zinc-400 transition-transform duration-200 ease-out", expanded && "rotate-180")} aria-hidden />
           </div>
         </div>
         <div>
@@ -82,7 +83,7 @@ function FeatureNodeView({ data }: NodeProps<FeatureFlowNode>) {
           </p>
         </div>
       </div>
-      {expanded ? (
+      <Disclosure open={expanded}>
         <div className="nodrag border-t border-zinc-100 px-1.5 py-1.5">
           {feature.workItems.length === 0 ? (
             <p className="px-2.5 py-2 text-xs text-zinc-400">No work items in this feature.</p>
@@ -117,7 +118,7 @@ function FeatureNodeView({ data }: NodeProps<FeatureFlowNode>) {
             </button>
           ) : null}
         </div>
-      ) : null}
+      </Disclosure>
     </div>
   );
 }

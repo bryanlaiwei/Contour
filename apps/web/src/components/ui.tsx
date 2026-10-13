@@ -27,7 +27,7 @@ export function Button({ variant = "secondary", size = "md", icon, loading = fal
       {...props}
       disabled={disabled || loading}
       className={cx(
-        "inline-flex items-center justify-center gap-1.5 rounded-lg font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-900 disabled:cursor-not-allowed disabled:opacity-50",
+        "inline-flex max-w-full items-center justify-center gap-1.5 rounded-lg font-medium whitespace-nowrap transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-900 disabled:cursor-not-allowed disabled:opacity-50",
         size === "sm" ? "h-8 px-2.5 text-[13px]" : "h-9 px-3.5 text-sm",
         variant === "primary" && "bg-zinc-900 text-white shadow-sm hover:bg-zinc-800",
         variant === "secondary" && "bg-white text-zinc-800 shadow-sm ring-1 ring-zinc-200 ring-inset hover:bg-zinc-50",
@@ -284,7 +284,7 @@ export function Dialog({
           </IconButton>
         </div>
         {children ? <div className="px-5 pt-4">{children}</div> : null}
-        <div className="flex justify-end gap-2 px-5 pt-5 pb-5">{footer}</div>
+        <div className="flex flex-wrap justify-end gap-2 px-5 pt-5 pb-5">{footer}</div>
       </div>
     </div>
   );
@@ -422,14 +422,14 @@ export function Menu({
     };
   }, [open]);
   return (
-    <div ref={root} className="relative">
+    <div ref={root} className={cx("relative", wide && "w-max max-w-full")}>
       {trigger(() => setOpen((value) => !value))}
       {open ? (
         <div
           role="menu"
           className={cx(
             "absolute z-30 mt-1 overflow-hidden rounded-xl bg-white p-1 shadow-lg ring-1 ring-zinc-200 animate-in",
-            wide ? "w-80" : "w-56",
+            wide ? "w-full" : "w-56",
             align === "left" ? "left-0" : "right-0",
           )}
         >
@@ -444,12 +444,13 @@ export function Menu({
                   item.onSelect();
                 }}
                 className={cx(
-                  "flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm disabled:opacity-40",
+                  "flex w-full gap-2 rounded-lg px-2.5 py-2 text-left text-sm disabled:opacity-40",
+                  wide ? "items-start" : "items-center",
                   item.danger ? "text-rose-600 hover:bg-rose-50" : "text-zinc-700 hover:bg-zinc-100",
                 )}
               >
-                {item.icon}
-                <span className="min-w-0 flex-1 truncate" title={item.label}>
+                <span className={cx("inline-flex shrink-0", wide && "mt-0.5")}>{item.icon}</span>
+                <span className={cx("min-w-0 flex-1", wide ? "break-words" : "truncate")} title={item.label}>
                   {item.label}
                 </span>
               </button>
