@@ -4,8 +4,8 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { AgentAdapter } from "../contract/adapter.js";
 import type { ParsedSession, SessionRecord } from "../contract/session.js";
-import { jsonlSessionLocators } from "../log-walk.js";
-import { textFromContent } from "../message-text.js";
+import { jsonlSessionLocators } from "../logs/log-walk.js";
+import { textFromContent } from "./message-text.js";
 import { parseJsonLines } from "./codex.js";
 
 type JsonRecord = Record<string, unknown>;

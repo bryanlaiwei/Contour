@@ -2,7 +2,7 @@ import { chmodSync, mkdirSync, mkdtempSync, realpathSync, rmSync } from "node:fs
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { readLogAccess } from "../log-access.js";
+import { readLogAccess } from "../logs/log-access.js";
 
 const temps: string[] = [];
 

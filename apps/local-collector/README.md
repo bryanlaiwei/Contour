@@ -6,7 +6,9 @@ This program runs on your computer. About every 30 seconds it reads Codex, Claud
 
 ```mermaid
 flowchart TD
-  serve["serve starts the helper"] --> http["Local server: pair, choose folders, show status"]
+  menu["Mac menu bar"] --> serve["serve starts the helper"]
+  cli["npm run dev:helper"] --> serve
+  serve --> http["Local server: pair, choose folders, show status"]
   serve --> loop["Every 30 seconds"]
 
   loop --> paired{"Paired and a folder is selected?"}
@@ -36,20 +38,24 @@ flowchart TD
 - `src/local-server.ts` is the local API for pairing, folder selection, and helper status. The web app renders that page.
 - `src/local-db.ts` stores pairing, selected folders, session checkpoints, and the upload outbox in SQLite.
 - `src/collection-pass.ts` decides which discovered sessions are eligible, writes their events into the outbox, and advances the checkpoint with that queue.
-- `src/find-sessions.ts` finds session files under an agent’s log directory and reads the ones that changed.
-- `src/change-tracker.ts` remembers each log file’s size and modification time so an unchanged session is skipped.
-- `src/read-after-offset.ts` reads only the bytes of a session log that come after the saved checkpoint.
-- `src/log-bytes.ts` identifies a log file and finds the end of its last complete line.
-- `src/log-walk.ts` walks a log directory so an adapter can list session files.
+- `src/logs/find-sessions.ts` finds session files under an agent’s log directory and reads the ones that changed.
+- `src/logs/change-tracker.ts` remembers each log file’s size and modification time so an unchanged session is skipped.
+- `src/logs/read-after-offset.ts` reads only the bytes of a session log that come after the saved checkpoint.
+- `src/logs/log-bytes.ts` identifies a log file and finds the end of its last complete line.
+- `src/logs/log-walk.ts` walks a log directory so an adapter can list session files.
+- `src/logs/log-access.ts` reports whether this process can read each agent log folder.
 - `src/agents.ts` lists the Codex, Claude Code, and Cursor adapters the scan loops over.
 - `src/contract/adapter.ts` defines where an agent’s logs live and how a session file is parsed.
 - `src/contract/session.ts` defines the parsed session and one user or assistant message.
 - `src/adapters/codex.ts` reads a Codex jsonl file and keeps user messages and assistant message text.
 - `src/adapters/claude-code.ts` reads a Claude Code jsonl file and keeps lines whose type is `user` or `assistant`.
 - `src/adapters/cursor.ts` reads Cursor agent transcripts and hook exports, and keeps lines whose role is `user` or `assistant`.
-- `src/message-text.ts` keeps written message text, drops hidden reasoning, and replaces tool calls with `[tool output omitted]`.
+- `src/adapters/message-text.ts` keeps written message text, drops hidden reasoning, and replaces tool calls with `[tool output omitted]`.
 - `src/build-events.ts` turns new messages into `session.started` and `session.content_added` events. Each event stays within 8,000 characters, 200 messages, and 256 KiB.
 - `src/upload-outbox.ts` sends queued events to the API and leaves failed uploads in the outbox for a later try.
 - `src/parse-file.ts` reads one log file and prints the events it would produce. The 30-second scan does not use it.
 - `src/mac/main.ts` is the staging menu-bar entry. It forces the staging site, then runs the same helper as `npm run dev:helper`.
-- `src/mac/MenuBar.swift` is the Mac status item. `npm run build:mac` packages it with the collector.
+- `src/mac/MenuBar.swift` is the Mac status item.
+- `src/mac/build.mjs` packages the menu bar, a Node binary, and this collector. Run it with `npm run build:mac`.
+- `src/fixtures/` holds sample Codex, Claude Code, and Cursor logs used by the tests.
+- `src/test/` covers scanning, eligibility, the outbox, the local server, and the command line.

@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { ApiError, api, errorMessage, type Me, type Project } from "./api";
-import { Onboarding } from "./components/Onboarding";
-import { SignIn } from "./components/SignIn";
-import { ToastProvider } from "./components/toast";
-import { Button, ErrorNote, Spinner } from "./components/ui";
-import { Workspace } from "./components/Workspace";
+import { Onboarding } from "./pages/Onboarding";
+import { SignIn } from "./pages/SignIn";
+import { Workspace } from "./pages/Workspace";
+import { ToastProvider } from "./ui/toast";
+import { Button, ErrorNote, Spinner } from "./ui/ui";
 import { supabase, type Session } from "./supabase";
 
 const projectKey = "apm:project";

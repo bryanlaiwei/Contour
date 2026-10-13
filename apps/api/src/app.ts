@@ -18,9 +18,9 @@ import {
 import { listProjectRoles, projectRole, type Role } from "@apm/core/workspace";
 import { connectProjectResponseSchema, projectListSchema, JSON_BODY_LIMIT_BYTES, SCHEMA_VERSION } from "@apm/shared";
 import { isAllowedWebOrigin } from "./cors.js";
-import { graphRouter } from "./graph/routes.js";
+import { graphRouter } from "./routes/graph.js";
 import { accessFrom, requireAccess } from "./require-access.js";
-import { workspaceRouter } from "./workspace-routes.js";
+import { workspaceRouter } from "./routes/workspace.js";
 
 const connectBody = z.object({
   owner: z.string().trim().min(1),

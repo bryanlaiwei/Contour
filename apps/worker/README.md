@@ -17,8 +17,8 @@ flowchart TD
 
   fiveSec --> job["Queue one job per project, up to 3 at once"]
   job --> facts["Facts: write pull requests, reviews, workflow runs, and evidence"]
-  facts --> model{"Saved OpenAI, Anthropic, or Gemini key, or OPENAI_API_KEY?"}
-  model -->|yes| interpret["Model reads up to 8 unread evidence rows and saves accepted map operations"]
+  facts --> model{"OPENAI_API_KEY set?"}
+  model -->|yes| interpret["Server OpenAI model reads up to 8 unread evidence rows and saves accepted map operations"]
   model -->|no| wait["Evidence stays unread"]
   events --> fiveSec
 ```
@@ -27,5 +27,6 @@ flowchart TD
 
 - `package.json` declares the `@apm/worker` package, its run scripts, and its dependency on `pg-boss`.
 - `tsconfig.json` points the TypeScript compiler at `src` and emits into `dist`.
-- `src/index.ts` checks configuration, connects to Postgres and GitHub, and starts the worker until the process is stopped. Map processing comes from `packages/core`.
-- `src/worker.ts` runs a saved webhook as soon as the API queues it, schedules the minute and five-minute loops, and runs facts, then model interpretation, for each due project.
+- `src/index.ts` checks configuration, connects to Postgres and GitHub, and starts the worker until the process is stopped. This release always uses the server OpenAI key. Map processing comes from `packages/core`.
+- `src/worker.ts` runs a saved webhook as soon as the API queues it, sweeps stale deliveries every minute, asks GitHub to refresh every 5 minutes, and every 5 seconds queues due projects, up to 3 at once.
+- `src/worker.test.ts` checks delivery processing and project queueing.

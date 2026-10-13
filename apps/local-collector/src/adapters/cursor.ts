@@ -6,8 +6,8 @@ import { readFileSync, statSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
 import type { AgentAdapter, SessionLocator } from "../contract/adapter.js";
 import type { ParsedSession, SessionRecord } from "../contract/session.js";
-import { isDirectory, isFile, walkDirectories, walkFiles } from "../log-walk.js";
-import { textFromContent } from "../message-text.js";
+import { isDirectory, isFile, walkDirectories, walkFiles } from "../logs/log-walk.js";
+import { textFromContent } from "./message-text.js";
 import { parseJsonLines } from "./codex.js";
 
 type JsonRecord = Record<string, unknown>;
