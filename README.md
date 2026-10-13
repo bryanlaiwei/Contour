@@ -1,6 +1,7 @@
 <p align="center">
   <img src="apps/web/src/favicon.svg" alt="Contour" width="72" />
 </p>
+
 <h3 align="center">Contour</h3>
 
 <p align="center">
