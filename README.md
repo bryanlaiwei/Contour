@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="apps/web/src/favicon.svg" alt="Contour" width="72" />
+  <img src="docs/logo.svg" alt="Contour" width="160" />
 </p>
 
-# [Contour](https://contourmaps.vercel.app)
+## [Contour](https://contourmaps.vercel.app)
 
 A roadmap of your project, built automatically from GitHub activities and local coding-agent sessions.
 
