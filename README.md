@@ -1,5 +1,8 @@
 <p align="center">
-  <img src="docs/logo.svg" alt="Contour" width="160" />
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/logo-on-dark.svg" />
+    <img src="docs/logo.svg" alt="Contour" width="160" />
+  </picture>
 </p>
 
 # [Contour](https://contourmaps.vercel.app)
