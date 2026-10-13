@@ -1,5 +1,5 @@
 import type { Pool, PoolClient } from "pg";
-import { evaluateSessionEligibility, normalizedEventSchema, type NormalizedEvent } from "@apm/shared";
+import { normalizedEventSchema, type NormalizedEvent } from "@apm/shared";
 import { insertEventsWith } from "./store.js";
 
 export type IngestRejection = {
@@ -97,21 +97,18 @@ async function insertAndList(
   return { acknowledged, rejected };
 }
 
+/** The helper already decided the working folder. The server only knows when tracking started. */
 function sessionRejection(event: NormalizedEvent, trackingStartedAt: string): string | null {
   if (event.details.kind !== "session.started" && event.details.kind !== "session.content_added") {
     return null;
   }
-  const decision = evaluateSessionEligibility({
-    createdAt: event.details.createdAt,
-    trackingStartedAt,
-    workingFolder: "/already-matched",
-    selectedRoots: ["/already-matched"],
-  });
-  if (!decision.eligible && decision.reason === "created_before_tracking") {
-    return "created_before_tracking";
-  }
-  if (!decision.eligible && decision.reason === "missing_creation_time") {
+  const createdAt = Date.parse(event.details.createdAt);
+  const tracking = Date.parse(trackingStartedAt);
+  if (Number.isNaN(createdAt)) {
     return "missing_creation_time";
+  }
+  if (Number.isNaN(tracking) || createdAt <= tracking) {
+    return "created_before_tracking";
   }
   return null;
 }
