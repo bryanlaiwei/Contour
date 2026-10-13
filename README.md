@@ -49,9 +49,9 @@ GitHub reaches the API through a webhook. The API stores the delivery and answer
 
 ## What you can do
 
-Sign in with GitHub, connect a repository you can write to, and pair the helper on this computer. Each repository belongs to one project.
+Sign in with GitHub, connect a GitHub repository you can write to, and pair the local helper on this computer that checks for local coding agent sessions. Each repository belongs to one project.
 
-A feature is a card. Its work items come from sessions and pull requests. An open pull request means in review, a draft means in progress, and work counts as merged only when its pull requests say so. An agent saying "done" never marks anything merged. Open a card for its work items, then a work item for the pull requests, CI, session excerpts, and history behind it.
+A feature is a card. Its work items come from sessions and GitHub activities. An open pull request means in review, a draft means in progress, and work counts as merged only when its pull requests say so. An agent saying "done" never marks anything merged. Open a card for its work items, then a work item for the pull requests, CI, session excerpts, and history behind it.
 
 You can rename a title, move cards around on the map, and merge features or work items.
 
