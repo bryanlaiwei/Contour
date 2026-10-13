@@ -1,36 +1,95 @@
-# Contour
+<p align="center">
+  <img src="apps/web/src/favicon.svg" alt="Contour" width="72" />
+</p>
 
-Contour is a feature map from GitHub and local agent work.
+<h1 align="center">Contour</h1>
 
-This repository is the TypeScript workspace for Contour: a React web app, an Express API, a background worker, a local helper, and Supabase for Postgres and GitHub login.
+<p align="center">
+  A feature map built from GitHub and local coding-agent sessions.
+</p>
 
-## Layout
+<p align="center">
+  <img src="https://img.shields.io/badge/Node.js->=22-3c873a?style=flat-square" alt="Node.js >= 22" />
+  <img src="https://img.shields.io/badge/TypeScript-blue?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript" />
+</p>
+
+<p align="center">
+  <a href="#overview">Overview</a> •
+  <a href="#features">Features</a> •
+  <a href="#architecture">Architecture</a> •
+  <a href="#project-structure">Project structure</a> •
+  <a href="#getting-started">Getting started</a> •
+  <a href="#how-the-map-is-built">How the map is built</a>
+</p>
+
+Contour watches a GitHub repository and the sessions from Codex, Claude Code, and Cursor, then groups that work into features and work items. The web app is the map: what is being built, what state it is in, and what it depends on.
+
+> [!TIP]
+> You can look around without an OpenAI key. Sign in once, then run `npm run demo:seed -w @apm/api -- your-github-username`. That adds a sample project, `demo/shop-app`.
+
+## Overview
+
+A pull request, a CI run, and an agent session are three records of the same work. Contour stores them as events, then a background worker turns those events into one map.
+
+- The **web app** is where you sign in, connect a repository, and read the map.
+- The **API** accepts sign-in, repository connections, session uploads, and GitHub webhooks.
+- The **local helper** runs on your computer, reads agent logs, and uploads new session text.
+- The **GitHub collector** checks repository access and turns webhooks into normalized events. The API and the worker call it. It does not run on its own.
+- The **worker** reads stored events and writes the map. Facts are applied before any model call.
+- **Postgres**, through Supabase, stores the events, the map, and GitHub login.
+
+## Features
+
+- **One map for a repository.** Features, work items, states, and dependencies, built from GitHub and from local agent sessions.
+- **Three agents.** Codex, Claude Code, and Cursor. The helper scans their log folders and uploads only what changed.
+- **GitHub as the source of state.** An open pull request means in review, a draft means in progress, and work counts as merged only when its pull requests say so. An agent saying "done" never marks anything merged.
+- **Corrections you keep.** Rename, move, merge, split, or dismiss a dependency. Later analysis does not undo that decision.
+- **A sample project.** Seed `demo/shop-app` and walk the map without a model key.
+
+## Architecture
+
+```mermaid
+flowchart LR
+  agents["Codex, Claude Code, Cursor"] --> helper["Local helper"]
+  github["GitHub"] --> collector["GitHub collector"]
+  helper --> api["API"]
+  collector --> api
+  api --> db["Postgres"]
+  db --> worker["Worker"]
+  worker --> db
+  db --> api
+  api --> web["Web map"]
+```
+
+The helper uploads session text. GitHub reaches the API through a webhook. The API stores both and answers immediately. The worker later turns stored events into the map. The browser only reads that map.
+
+## Project structure
 
 | Path | Role |
 |---|---|
-| `apps/api` | Express HTTP routes |
-| `apps/github-collector` | GitHub webhook normalization, enrichment, and refresh |
-| `apps/local-collector` | Local helper. The Mac menu-bar app is `src/mac/` |
-| `apps/web` | React map |
-| `apps/worker` | Background jobs that turn stored events into the map |
-| `packages/core` | Database, map processing, and other logic shared by the API and the worker |
-| `packages/shared` | Shared schemas and types |
-| `supabase` | Local Postgres and Auth |
+| [`apps/web`](apps/web) | React map |
+| [`apps/api`](apps/api) | Express HTTP routes |
+| [`apps/worker`](apps/worker) | Background jobs that turn stored events into the map |
+| [`apps/github-collector`](apps/github-collector) | Webhook normalization, enrichment, and refresh |
+| [`apps/local-collector`](apps/local-collector) | Local helper. The Mac menu-bar app is `src/mac/` |
+| [`packages/core`](packages/core) | Database, map processing, and logic shared by the API and the worker |
+| [`packages/shared`](packages/shared) | Shared schemas and types |
+| [`supabase`](supabase) | Local Postgres and Auth |
 
-## Prerequisites
+Each app folder has its own README for the flow and the files inside it.
 
-- Node.js 22
-- Docker Desktop, running, for `supabase start`
-- A GitHub OAuth app for local login, and a GitHub App for pull request and Actions webhooks
-- `OPENAI_API_KEY` groups work into the map. This release does not let a person save their own key. Without that server key, GitHub and session facts are still stored and pull request states still update. The branch `full-product` keeps personal model keys and sharing a project with other people.
+## Getting started
+
+### Prerequisites
+
+- [Node.js 22](https://nodejs.org/) or newer
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/), running, for `supabase start`
+- A GitHub OAuth app for local login
+- A GitHub App for pull request and Actions webhooks
+
+### Install and run
 
 Copy `.env.example` to `.env` and fill the values after `supabase status`. Do not commit `.env`.
-
-`GITHUB_WEBHOOK_SECRET` must be a non-empty string. The API exits on startup when it is missing, and signature checks reject an empty secret. Connecting a repository also requires `GITHUB_APP_ID` and `GITHUB_APP_PRIVATE_KEY`. The API asks GitHub whether that App installation can access the repository before it accepts the claim. A private key stored in `.env` can use literal `\n` escapes.
-
-Public tables have row level security enabled and no policies. The API uses `DATABASE_URL` (the database owner), which is not the anon key. Do not put the service role key in the browser.
-
-## Local commands
 
 ```bash
 npm install
@@ -43,73 +102,41 @@ npm run dev:worker
 npm run dev:helper
 ```
 
-`npm test` needs `DATABASE_URL` and the migrations in `supabase/migrations` applied. `supabase start` does both. Tests that talk to GitHub are mocked.
+Open `http://127.0.0.1:5173`.
 
-## Server
+`npm test` needs `DATABASE_URL` and the migrations in `supabase/migrations`. `supabase start` does both. Tests that talk to GitHub are mocked.
 
-`npm run dev:api` and `npm run dev:worker` stay on your machine and run TypeScript directly. On a server, compile first, then start the compiled programs:
+> [!IMPORTANT]
+> `GITHUB_WEBHOOK_SECRET` must be a non-empty string. The API exits on startup when it is missing. Connecting a repository also requires `GITHUB_APP_ID` and `GITHUB_APP_PRIVATE_KEY`. A private key in `.env` can use literal `\n` escapes.
 
-```bash
-npm run build:server
-npm start --workspace @apm/api
-npm start --workspace @apm/worker
-```
+Public tables have row level security enabled and no policies. The API uses `DATABASE_URL` (the database owner). Do not put the service role key in the browser.
 
-`npm start` listens on every interface and on `PORT` (otherwise `API_PORT`, otherwise 4000). Set `HOST` to pin the address. The API and the worker both stop on `SIGTERM`: the API stops accepting requests, stops the webhook publisher, and closes the database pool. A worker stopped during a model call releases the interpretation lease it holds.
+### Connect the helper
 
-On Railway, the `api` and `worker` services take their build and start commands from `.railway/railway.ts`. Railway does not read that file during a deploy: after changing it, run `railway config plan`, then `railway config apply`. Secrets stay in the Railway dashboard; the file does not manage variables.
+Start the helper with `npm run dev:helper`, then open **Settings → Local helper** and click **Connect this computer**. The site creates a one-time code and hands it to the helper at `http://127.0.0.1:47321`. Folder choices for which sessions to upload live on that same page.
 
-The web app bakes its addresses in at build time, so set them before building:
+### This release
 
-```bash
-npm run build --workspace @apm/web
-```
+You can sign in with GitHub, connect repositories you can write to, pair a helper, and read the map. Each repository belongs to one project. The server uses one OpenAI key, `OPENAI_API_KEY`, to group work.
 
-Required environment variables: `DATABASE_URL`, `GITHUB_WEBHOOK_SECRET`, `GITHUB_APP_ID`, `GITHUB_APP_PRIVATE_KEY`, `SUPABASE_URL` (and `SUPABASE_JWT_SECRET` when tokens are still HS256), `APM_SECRETS_KEY`, and `WEB_ORIGIN`. `OPENAI_API_KEY` is only for a server-wide model key. A missing `.env` file is fine. Variables already set in the environment are left as they are.
+> [!NOTE]
+> Sharing a project, and saving a personal model key, are left out of this release. That code stays on the `full-product` branch. Without the server key, GitHub and session facts are still stored and pull request states still update.
 
-`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, and `VITE_API_URL` have to be set before the web build. The helper still runs on each person's computer. For local development, set that computer's `WEB_ORIGIN` to the site you opened, which defaults to `http://127.0.0.1:5173`. Pairing sends the API address from `VITE_API_URL`.
+## How the map is built
 
-The hosted site gives a Terminal command that downloads the Mac app with curl, so Gatekeeper does not treat it as a browser download. That app is built from this same helper. That build only accepts `https://contourmaps.vercel.app` and does not ask the person to set `WEB_ORIGIN`. Publish each build as `Contour-Mac.zip` on the GitHub release `mac-helper-1`, which is where that command downloads from. `npm run dev:helper` remains the way to start the helper while developing. Build the app with `npm run build:mac --workspace @apm/local-collector`.
+The helper keeps per-session checkpoints and an upload queue in SQLite. About every 30 seconds it scans `~/.codex/sessions`, `~/.claude/projects`, and `~/.cursor/projects`. Settings can point an agent at a different folder. That choice stays on this computer.
 
-Each API process opens `DATABASE_POOL_MAX` database connections (default 10) plus 2 for the webhook publisher. The worker opens `DATABASE_POOL_MAX` plus 4. Two API processes and one worker is 38 at the defaults. On Supabase, use the pooler connection string and lower `DATABASE_POOL_MAX`. Turn on database backups. Keep a copy of `APM_SECRETS_KEY` somewhere safe: saved model keys cannot be read without it.
+The API stores each GitHub delivery and answers GitHub before calling the GitHub API. The worker then loads the current pull request or workflow run. Every 5 seconds it turns new events into facts, then asks the model to group evidence that has settled. Facts never wait for the model. Pull request and CI facts only enter through the verified webhook and the refresh.
 
-In the Supabase dashboard, add the site address to the redirect URLs. Add that same address as the GitHub OAuth callback. Point the GitHub App webhook at `https://<your-api>/github/webhook`.
-
-An index added later, once a table has real data, should use `create index concurrently` and run outside a transaction.
-
-Login, the single-repository GitHub connection, webhook reception, session samples, folder matching, and the common event contracts sit on top of this skeleton.
-
-Collection is recoverable. The helper keeps per-session checkpoints and an upload queue in SQLite. Eligible sessions are queued from the beginning of the log, including opening messages found after the helper starts. A session created before tracking stays excluded when it is resumed. Appended lines are queued once. If the upload fails, the queue is still there after a restart and the same event ids are sent again.
-
-Start the helper, then open Settings → Local helper and click "Connect this computer":
-
-```bash
-npm run dev:helper
-```
-
-The web app creates a one-time code and hands it to the helper at `http://127.0.0.1:47321`. The helper stores a revocable device token. `DELETE /helper/token` with that token stops further uploads. Settings → Local helper is where you add the project folders; only sessions whose working folder is inside one of them are uploaded.
-
-While it runs, the helper scans the agent logs every 30 seconds and uploads what it queued. It reads `~/.codex/sessions`, `~/.claude/projects`, and `~/.cursor/projects` by default. Settings → Local helper can point an agent at a different folder; that choice stays on this computer. Cursor agent transcripts are `<id>.jsonl` files. A hook export of `session.json` plus `transcript.jsonl` is still read. Set `APM_CURSOR_SESSIONS` to scan a different Cursor folder. Files that have not changed since they were last collected are skipped; a session that fails to collect is tried again on the next scan without holding up the others. A session's new messages are split into events of at most 8,000 characters, 200 messages, and 256 KiB. The queue is sent in requests of at most 100 events and 448 KiB, so it always fits the API's limits. When the API is unreachable, the helper retries after 5 seconds, then doubles the wait up to 5 minutes. When the API refuses the device token, Settings → Local helper asks you to reconnect. Events the API rejects for good (for example a session created before tracking) are dropped from the queue. Settings → Local helper shows the last scan, the last upload, what is waiting, and any paused sessions, and has a "Scan now" button.
-
-The worker (`npm run dev:worker`) processes each webhook as a pg-boss job. The API stores the delivery and answers GitHub before calling the GitHub API; the worker then loads the current pull request or workflow run. Every minute it also processes deliveries that are still queued a minute after they arrived, for example because that job was never queued. Every 5 minutes it asks GitHub for the current state of open pull requests and unfinished workflow runs seen in the last 30 days and 24 hours, least recently checked first, and stores an update when GitHub reports a newer one. When GitHub cannot be reached, a delivery is stored from the webhook payload alone. A delivery whose processing fails is retried by the sweep after 1, 2, 4 and 8 minutes and marked `failed` after 5 attempts; it no longer holds up the deliveries behind it.
-
-Stored events become the map. The worker checks every 5 seconds for projects with new events and processes them in two stages, up to three projects side by side. Facts never wait for AI: they are applied before interpretation starts and again after each model call, even while another run is interpreting the same project. Pull request and CI facts only enter through the verified webhook and the refresh; `/ingest/events` refuses GitHub events.
-
-The facts stage uses no AI. It records pull requests, reviews and workflow runs (keeping every rerun attempt), and turns new session messages and new pull request descriptions into evidence. A message that was already stored does not become evidence again, and a pull request update that only changes GitHub's timestamp creates none. A work item's state comes from its pull requests when it has any: open means in review, a draft means in progress, and it counts as merged only when every pull request is closed and at least one was merged. Without pull requests, a session can only make work planned or in progress, so an agent saying "done" never marks anything merged.
-
-The interpretation stage sends new evidence to the server OpenAI key (`OPENAI_API_KEY`) once no new evidence has arrived for 20 seconds, or 60 seconds after the oldest piece is waiting. Up to 8 pieces go at once, along with the existing features, the work items most likely to be related (same session, same or explicitly linked pull request, recent, or sharing words), and earlier excerpts from the same sessions. The model answers with a fixed JSON shape. It refers to evidence and records only by short labels from the prompt, such as `E1` or `W2`, so it cannot name a record it was not shown. The API checks every operation before saving it and drops any that cite unknown labels, give no evidence, or change something a person set. Text inside sessions and pull requests is marked as data in the prompt. When the model call or saving its answer fails, the facts stay, the map keeps its last version, and the evidence is retried with a growing delay (30 seconds, doubling up to 30 minutes, and never dropped). Evidence that the model only cited in operations naming records it was not shown gets up to three tries. When the model returns no changes, processing finishes and the map revision stays the same.
-
-The map revision goes up only when something a viewer can see changes. The API serves it at:
+The map is served at:
 
 | Route | Returns |
 |---|---|
-| `GET /projects/:id/graph` | Features, their work items with state and counts, dependencies, and how much evidence still waits for analysis |
-| `GET /projects/:id/graph/revision` | The revision number and how much evidence waits for analysis, for cheap polling |
-| `GET /projects/:id/work-items/:workItemId` | Pull requests with CI runs, evidence excerpts, contributors, dependencies and change history |
-| `GET /projects/:id/features/:featureId` | The feature's work items, contributors and history |
-| `POST /projects/:id/corrections` | Applies `rename`, `move`, `merge`, `split` or `dismiss` |
-
-A correction is saved as a person's decision. A renamed title or a moved item is not changed back by later analysis. A merged item's old id keeps resolving to the item it was merged into. Evidence and pull requests split out of an item cannot be attached to it again by analysis; merging the two items back is a person's decision and returns them. Work items moved by a feature merge stay where the person put them. A dismissed dependency stays dismissed. If a correction lands while the model is still working on records it touched, that answer is discarded and the evidence is analyzed again against the corrected map.
+| `GET /projects/:id/graph` | Features, work items, dependencies, and evidence still waiting |
+| `GET /projects/:id/graph/revision` | The revision number, for cheap polling |
+| `GET /projects/:id/work-items/:workItemId` | Pull requests, CI, evidence, contributors, and history |
+| `GET /projects/:id/features/:featureId` | The feature's work items, contributors, and history |
+| `POST /projects/:id/corrections` | `rename`, `move`, `merge`, `split`, or `dismiss` |
 
 To check grouping quality with a real model, set `OPENAI_API_KEY` and run:
 
@@ -117,22 +144,24 @@ To check grouping quality with a real model, set `OPENAI_API_KEY` and run:
 npm run eval -w @apm/api
 ```
 
-It feeds sample sessions from all three agents and a few pull requests into a temporary project, prints the resulting map, and reports how many pairs of related evidence ended up together and how many unrelated pairs stayed apart. The project is deleted afterwards unless you pass `-- --keep`. `OPENAI_MODEL` defaults to `gpt-5-nano`, the cheapest OpenAI model. If the eval shows related work being split up or unrelated work lumped together, set `OPENAI_MODEL=gpt-5-mini` (about five times the price) and compare.
+`OPENAI_MODEL` defaults to `gpt-5-nano`. The sample project is deleted afterwards unless you pass `-- --keep`.
 
-The web app is at `http://127.0.0.1:5173`.
+### Run it on a server
 
-- **Sign in and connect.** Sign in with GitHub, then enter the repository as `owner/name` or paste its URL. The API asks the GitHub App for the repository id, so you no longer type it, and checks that your GitHub account has write access to the repository. Your GitHub account comes from the GitHub identity Supabase recorded at sign-in, not from profile metadata. You can connect as many repositories as you like, but each repository belongs to one project; "New project" in the project menu opens the connect page. This release does not share a project with other people.
-- **The map.** Each feature is a card with a bar showing how many of its work items are in each state, a line like "1 in progress · 1 in review · 1 merged", a blocked count when something is blocked, and the agents and people who worked on it. A card that includes a pull request from a GitHub account other than yours says "Someone else", and the details name that account. An arrow between two cards means work in one waits for work in the other; hover it to see which. Click a card to expand it in place and list its work items. Click a work item to open its details on the right.
-- **Details.** A work item shows where its state comes from (for example "From GitHub: a pull request is open and ready for review"), its pull requests with review decisions and CI results including earlier failed attempts, its dependencies, the session excerpts and pull request descriptions linked to it, contributors, and a readable history that says whether GitHub, the AI or a named person made each change.
-- **Corrections.** Click a title to rename it. The `…` menu moves a work item to another feature, merges it into another item, or splits pull requests and excerpts into a new item; features can be merged too. Hover a dependency and click × to remove it. Each correction is saved as that person's decision.
-- **Layout.** Positions are shared by everyone on the project and saved separately from the map, so moving a card never changes the map revision. New features take the next free spot and existing cards stay where they are. Drag cards to rearrange them; a card dropped on another moves down to the nearest free spot. The grid button in the bottom-left corner re-arranges everything, with prerequisites to the left of the work that waits for them.
-- **Refresh.** The page checks the map revision every 15 seconds and when the window regains focus, and reloads the map and any open details when it changed. A small notice at the top says when updates are waiting for AI analysis, and turns amber when they have waited more than 3 minutes.
-- **Settings.** General shows the repository and tracking start, and lets an owner delete the project (type its name to confirm). Deleting a project also removes the stored webhook payloads for its repository. Local helper shows whether the helper on this computer is running and connected, connects it in one click, links to its folder page, and lists every connected helper with when it was last seen. Health shows the last GitHub webhook, the last session activity, and whether AI analysis is waiting or failing. Sharing a project and saving a personal model key are not in this release.
-
-To look around without an OpenAI key, create a sample project for your account. Sign in once first, then run:
+`npm run dev:api` and `npm run dev:worker` stay on your machine and run TypeScript directly. On a server, compile first:
 
 ```bash
-npm run demo:seed -w @apm/api -- your-github-username
+npm run build:server
+npm start --workspace @apm/api
+npm start --workspace @apm/worker
 ```
 
-It adds `demo/shop-app` to the repository menu. Its sample sessions, pull requests, reviews and CI runs go through the same processing as real data, with a scripted stand-in for the model. Run it again to rebuild it, or add `--remove` to delete it.
+`npm start` listens on `PORT` (otherwise `API_PORT`, otherwise 4000). The API and the worker both stop on `SIGTERM`.
+
+On Railway, the `api` and `worker` services take their build and start commands from `.railway/railway.ts`. After changing that file, run `railway config plan`, then `railway config apply`. Secrets stay in the Railway dashboard.
+
+The web app bakes `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, and `VITE_API_URL` in at build time. The hosted Mac app is published as `Contour-Mac.zip` on the GitHub release `mac-helper-v1.0.0`. Build it with `npm run build:mac --workspace @apm/local-collector`.
+
+Required server environment variables: `DATABASE_URL`, `GITHUB_WEBHOOK_SECRET`, `GITHUB_APP_ID`, `GITHUB_APP_PRIVATE_KEY`, `SUPABASE_URL` (and `SUPABASE_JWT_SECRET` when tokens are still HS256), `APM_SECRETS_KEY`, and `WEB_ORIGIN`. `OPENAI_API_KEY` is the server-wide model key.
+
+Point the GitHub App webhook at `https://<your-api>/github/webhook`. In the Supabase dashboard, add the site address to the redirect URLs, and add that same address as the GitHub OAuth callback.
