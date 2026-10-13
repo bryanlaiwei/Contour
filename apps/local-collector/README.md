@@ -6,7 +6,9 @@ This program runs on your computer. About every 30 seconds it reads Codex, Claud
 
 ```mermaid
 flowchart TD
-  serve["serve starts the helper"] --> http["Local server: pair, choose folders, show status"]
+  menu["Mac menu bar"] --> serve["serve starts the helper"]
+  cli["npm run dev:helper"] --> serve
+  serve --> http["Local server: pair, choose folders, show status"]
   serve --> loop["Every 30 seconds"]
 
   loop --> paired{"Paired and a folder is selected?"}
@@ -53,4 +55,7 @@ flowchart TD
 - `src/upload-outbox.ts` sends queued events to the API and leaves failed uploads in the outbox for a later try.
 - `src/parse-file.ts` reads one log file and prints the events it would produce. The 30-second scan does not use it.
 - `src/mac/main.ts` is the staging menu-bar entry. It forces the staging site, then runs the same helper as `npm run dev:helper`.
-- `src/mac/MenuBar.swift` is the Mac status item. `npm run build:mac` packages it with the collector.
+- `src/mac/MenuBar.swift` is the Mac status item.
+- `src/mac/build.mjs` packages the menu bar, a Node binary, and this collector. Run it with `npm run build:mac`.
+- `src/fixtures/` holds sample Codex, Claude Code, and Cursor logs used by the tests.
+- `src/test/` covers scanning, eligibility, the outbox, the local server, and the command line.
