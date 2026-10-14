@@ -22,7 +22,7 @@ export function SignIn({ onSignIn }: { onSignIn: () => Promise<string | null> })
       <div className="mx-auto flex w-full max-w-5xl flex-col px-5 py-6 sm:px-8 sm:py-8">
         <section className="mt-6 max-w-2xl sm:mt-10">
           <h1 className="text-4xl font-semibold tracking-tight text-balance text-zinc-900 sm:text-5xl">A live map of the work.</h1>
-          <p className="mt-4 max-w-xl text-lg leading-relaxed text-zinc-600">
+          <p className="mt-4 max-w-2xl text-lg leading-relaxed text-zinc-600">
             Built automatically from pull requests, Actions runs, and coding agent sessions.
           </p>
         </section>
