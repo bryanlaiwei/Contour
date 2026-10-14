@@ -89,6 +89,9 @@ async function projectMember(
 
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+/** Pull request payloads can pass the parser's 100 KB default. 2 MB still rejects a huge body. */
+const githubWebhookBodyLimit = "2mb";
+
 export function createApp(deps: AppDeps) {
   if (deps.webhookSecret.trim() === "") {
     throw new Error(
@@ -117,7 +120,7 @@ export function createApp(deps: AppDeps) {
     res.json({ ok: true, schemaVersion: SCHEMA_VERSION });
   });
 
-  app.post("/github/webhook", express.raw({ type: "application/json" }), async (req, res) => {
+  app.post("/github/webhook", express.raw({ type: "application/json", limit: githubWebhookBodyLimit }), async (req, res) => {
     const body = Buffer.isBuffer(req.body) ? req.body : Buffer.from("");
     const valid = verifyGithubSignature(body, req.header("x-hub-signature-256"), deps.webhookSecret);
     if (!valid) {
