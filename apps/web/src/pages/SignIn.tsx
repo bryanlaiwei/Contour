@@ -10,6 +10,7 @@ const mapNotes = [
   { title: "Relationships", detail: "Relationships between features show up on the map." },
   { title: "Details", detail: "Open a card to see information about the pull requests, the CI results, and key parts of the sessions." },
   { title: "Projects", detail: "Create, delete, or swap projects as you wish." },
+  { title: "Tracing", detail: "The map updates with the webpage open or closed." },
 ] as const;
 
 export function SignIn({ onSignIn }: { onSignIn: () => Promise<string | null> }) {
@@ -21,8 +22,8 @@ export function SignIn({ onSignIn }: { onSignIn: () => Promise<string | null> })
       <div className="mx-auto flex w-full max-w-5xl flex-col px-5 py-6 sm:px-8 sm:py-8">
         <section className="mt-6 max-w-2xl sm:mt-10">
           <h1 className="text-4xl font-semibold tracking-tight text-balance text-zinc-900 sm:text-5xl">A live map of the work.</h1>
-          <p className="mt-4 max-w-xl text-lg leading-relaxed text-zinc-600">
-            Built from pull requests, Actions runs, and coding agent sessions.
+          <p className="mt-4 max-w-2xl text-lg leading-relaxed text-zinc-600">
+            Built automatically from pull requests, Actions runs, and coding agent sessions.
           </p>
         </section>
 
