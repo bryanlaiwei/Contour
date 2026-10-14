@@ -96,6 +96,8 @@ Open `http://127.0.0.1:5173`. In **Settings → Local helper**, click **Connect 
 
 `npm test` needs `DATABASE_URL` and the migrations in `supabase/migrations`. `supabase start` does both. Tests that talk to GitHub are mocked.
 
+CI is one `check` job. Postgres starts during `npm ci` and typecheck; a service container or a host `psql` install belongs off that path. Give tests their own job only once `npm test` on the runner is over a minute, because each job repeats checkout and install.
+
 > [!IMPORTANT]
 > `GITHUB_WEBHOOK_SECRET` must be a non-empty string. The API exits on startup when it is missing. Connecting a repository also requires `GITHUB_APP_ID` and `GITHUB_APP_PRIVATE_KEY`. A private key in `.env` can use literal `\n` escapes.
 
