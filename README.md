@@ -1,7 +1,7 @@
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/logo-on-dark.svg" />
-    <img src="docs/logo-light.svg" alt="Contour" width="160" />
+    <img src="docs/logo-light-v2.svg" alt="Contour" width="160" />
   </picture>
 </p>
 
