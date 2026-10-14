@@ -13,24 +13,32 @@ jobs:
       GITHUB_WEBHOOK_SECRET: ci-webhook-secret
     steps:
       - uses: actions/checkout@v4
-      # A service container's 10s health interval kept the job idle after
-      # Postgres was already accepting connections (run 38507544017: ready
-      # 03:41:37, step ended 03:41:51). Start it here and poll every second
-      # so the image pull overlaps setup-node and npm ci.
-      - name: Start Postgres
-        run: |
-          docker run -d --name ci-pg \
-            -e POSTGRES_PASSWORD=postgres \
-            -p 5432:5432 \
-            postgres:16
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
+      # A service container's 10s health interval kept the job idle after
+      # Postgres was already accepting connections (run 38507544017: ready
+      # 03:41:37, step ended 03:41:51). Pull the image beside npm ci.
+      # docker run itself waits for the pull, so a separate Start Postgres
+      # step still blocked setup (run 38511382923, 7s).
+      - name: Install dependencies and pull Postgres
+        run: |
+          set -euo pipefail
+          docker pull postgres:16 >"$RUNNER_TEMP/pg-pull.log" 2>&1 &
+          pull_pid=$!
+          npm ci
+          if ! wait "$pull_pid"; then
+            cat "$RUNNER_TEMP/pg-pull.log" >&2
+            exit 1
+          fi
       - name: Typecheck and migrate
         run: |
           set -euo pipefail
+          docker run -d --name ci-pg \
+            -e POSTGRES_PASSWORD=postgres \
+            -p 5432:5432 \
+            postgres:16
           npm run typecheck &
           typecheck_pid=$!
           ready=0
