@@ -7,7 +7,7 @@
 
 # [Contour](https://contourmaps.vercel.app)
 
-A roadmap of your project, built automatically from GitHub activities and local coding-agent sessions, even with the webpage closed. 
+A roadmap of your projects, built automatically from GitHub activities and local coding-agent sessions, even with the webpage closed. 
 
 <p align="center">
   <img src="https://img.shields.io/badge/TypeScript-3178C6?style=flat&logo=typescript&logoColor=white" alt="TypeScript" />
