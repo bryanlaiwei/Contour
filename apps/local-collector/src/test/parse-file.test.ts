@@ -138,6 +138,9 @@ describe("session samples", () => {
     const tooEarly = collect("codex", { ...parsed, createdAt: "2026-09-24T11:00:00.000Z" }, ["/Projects/my-app"]);
     expect(tooEarly).toMatchObject({ eligible: false, reason: "created_before_tracking", events: [] });
 
+    const atStart = collect("codex", { ...parsed, createdAt: trackingStartedAt }, ["/Projects/my-app"]);
+    expect(atStart).toMatchObject({ eligible: false, reason: "created_before_tracking", events: [] });
+
     const otherFolder = collect("codex", parsed, ["/Projects/other-app"]);
     expect(otherFolder).toMatchObject({ eligible: false, reason: "folder_not_selected", events: [] });
 

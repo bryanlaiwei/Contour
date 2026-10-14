@@ -6,7 +6,7 @@ const trackingStartedAt = "2026-09-24T12:00:00.000Z";
 const selectedRoots = ["/Projects/my-app"];
 
 describe("session eligibility", () => {
-  it("accepts a session created after tracking when the folder matches", () => {
+  it("accepts a session created after tracking and excludes one created at that instant", () => {
     expect(
       evaluateSessionEligibility({
         createdAt: "2026-09-24T12:00:01.000Z",
@@ -15,17 +15,15 @@ describe("session eligibility", () => {
         selectedRoots,
       }),
     ).toEqual({ eligible: true, matchedRoot: "/Projects/my-app" });
-  });
 
-  it("excludes sessions created at or before tracking starts", () => {
     expect(
       evaluateSessionEligibility({
         createdAt: trackingStartedAt,
         trackingStartedAt,
         workingFolder: "/Projects/my-app",
         selectedRoots,
-      }).eligible,
-    ).toBe(false);
+      }),
+    ).toEqual({ eligible: false, reason: "created_before_tracking" });
   });
 
   it("excludes sessions with no reliable creation time", () => {
