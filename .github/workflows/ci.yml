@@ -8,20 +8,8 @@ on:
 jobs:
   check:
     runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:16
-        env:
-          POSTGRES_PASSWORD: postgres
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U postgres"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
     env:
-      DATABASE_URL: postgres://postgres:postgres@localhost:5432/postgres
+      DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/postgres
       GITHUB_WEBHOOK_SECRET: ci-webhook-secret
     steps:
       - uses: actions/checkout@v4
@@ -29,13 +17,47 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
-      - run: sudo apt-get update && sudo apt-get install -y postgresql-client
-      - name: Apply migrations
+      # A service container's 10s health interval kept the job idle after
+      # Postgres was already accepting connections (run 38507544017: ready
+      # 03:41:37, step ended 03:41:51). Pull the image beside npm ci.
+      # docker run itself waits for the pull, so a separate Start Postgres
+      # step still blocked setup (run 38511382923, 7s).
+      - name: Install dependencies and pull Postgres
         run: |
-          for f in supabase/migrations/*.sql; do
-            psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f "$f"
+          set -euo pipefail
+          docker pull postgres:16 >"$RUNNER_TEMP/pg-pull.log" 2>&1 &
+          pull_pid=$!
+          npm ci
+          if ! wait "$pull_pid"; then
+            cat "$RUNNER_TEMP/pg-pull.log" >&2
+            exit 1
+          fi
+      - name: Typecheck and migrate
+        run: |
+          set -euo pipefail
+          docker run -d --name ci-pg \
+            -e POSTGRES_PASSWORD=postgres \
+            -p 5432:5432 \
+            postgres:16
+          npm run typecheck &
+          typecheck_pid=$!
+          ready=0
+          for _ in $(seq 1 90); do
+            if docker exec ci-pg pg_isready -U postgres >/dev/null 2>&1; then
+              ready=1
+              break
+            fi
+            sleep 1
           done
-      - run: npm run typecheck
+          if [ "$ready" -ne 1 ]; then
+            echo "Postgres did not become ready" >&2
+            docker logs ci-pg >&2 || true
+            kill "$typecheck_pid" || true
+            exit 1
+          fi
+          for f in supabase/migrations/*.sql; do
+            docker exec -i ci-pg psql -U postgres -v ON_ERROR_STOP=1 -d postgres < "$f"
+          done
+          wait "$typecheck_pid"
       - run: npm run build:server
       - run: npm test
