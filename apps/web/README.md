@@ -19,8 +19,6 @@ flowchart TD
   map --> settings["Settings shows general, the local helper, and health"]
 ```
 
-This release shows the members tab and hides the model tab. `src/release.ts` keeps the model-key source in the tree for a later release.
-
 ## Files
 
 - `package.json` declares the `@apm/web` package, Vite, and React.
