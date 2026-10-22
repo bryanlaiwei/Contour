@@ -24,6 +24,7 @@ import { agentLabel, formatDateTime, timeAgo } from "../format";
 import { cx, useNow } from "../helpers";
 import { releaseChoosesModelKey, releaseSharesProjects } from "../release";
 import { ConfirmDialog } from "../panel/Dialogs";
+import { MacHelperDownload } from "./MacHelperDownload";
 import { GithubMark } from "../ui/GithubMark";
 import { useToast } from "../ui/toast-context";
 import { AgentBadge, Avatar, Button, ErrorNote, Field, IconButton, Spinner, TimeAgo, inputClass } from "../ui/ui";
@@ -476,6 +477,11 @@ function HelperTab({ token, settings, reload }: { token: string; settings: Proje
                           : `${folderCount} folder${folderCount === 1 ? "" : "s"} selected · last upload ${timeAgo(here.lastUploadAt, now)}${here.queued > 0 ? ` · ${here.queued} waiting` : ""}`}
             </p>
             {here?.lastError && !here.needsPairing ? <p className="mt-1 text-xs break-words text-rose-600">{here.lastError}</p> : null}
+            {overview !== undefined && !connected ? (
+              <div className="mt-3">
+                <MacHelperDownload />
+              </div>
+            ) : null}
             <div className="mt-3 flex flex-col items-start gap-2 sm:flex-row sm:flex-wrap sm:items-center">
               <Button size="sm" variant={connected ? "secondary" : "primary"} loading={connecting} onClick={() => void connect()}>
                 {here ? "Reconnect" : "Connect this computer"}
