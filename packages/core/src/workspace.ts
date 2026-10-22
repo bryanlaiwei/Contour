@@ -135,6 +135,11 @@ async function findSignedInGithubUser(db: Queryable, githubUserId: number): Prom
   if (profileUserId) {
     return { userId: profileUserId };
   }
+  // CI uses plain Postgres. A missing auth schema means this person has no Supabase sign-in.
+  const identities = await db.query<{ rel: string | null }>(`select to_regclass('auth.identities') as rel`);
+  if (!identities.rows[0]?.rel) {
+    return null;
+  }
   const identity = await db.query<{ user_id: string }>(
     `select user_id from auth.identities
      where provider = 'github'
