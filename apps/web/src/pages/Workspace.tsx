@@ -1,4 +1,4 @@
-import { Check, ChevronDown, CircleAlert, ExternalLink, LoaderCircle, LogOut, Mail, Plus, Settings, WifiOff } from "lucide-react";
+import { Check, ChevronDown, CircleAlert, ExternalLink, LoaderCircle, LogOut, Plus, Settings, WifiOff } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ApiError, api, errorMessage, type Graph, type Me, type Project } from "../api";
 import { releaseSharesProjects } from "../release";
@@ -45,22 +45,18 @@ function useStoredSet(key: string): [Set<string>, (update: (current: Set<string>
 export function Workspace({
   token,
   me,
-  invitations,
   project,
   projects,
   onSwitchProject,
-  onJoined,
   onSignOut,
   onProjectGone,
   onConnectRepository,
 }: {
   token: string;
   me: Me["user"];
-  invitations: Me["invitations"];
   project: Project;
   projects: Project[];
   onSwitchProject: (projectId: string) => void;
-  onJoined: (projectId: string) => void;
   onSignOut: () => void;
   onProjectGone: () => void;
   onConnectRepository: () => void;
@@ -359,28 +355,6 @@ export function Workspace({
               </span>
             </button>
           ) : null}
-          {releaseSharesProjects && invitations.length > 0 ? (
-            <Menu
-              trigger={(toggle) => (
-                <button
-                  type="button"
-                  onClick={toggle}
-                  className="inline-flex min-w-0 items-center gap-1.5 rounded-full bg-zinc-100 px-2.5 py-1 text-xs font-medium text-zinc-800 ring-1 ring-zinc-200 hover:bg-zinc-200"
-                >
-                  <Mail className="size-3.5 shrink-0" />
-                  {invitations.length} invitation{invitations.length === 1 ? "" : "s"}
-                </button>
-              )}
-              items={invitations.map((invitation) => ({
-                label: `Join ${invitation.project.owner}/${invitation.project.name}`,
-                onSelect: () =>
-                  void api
-                    .acceptInvitation(token, invitation.id)
-                    .then((body) => onJoined(body.projectId))
-                    .catch((reason: unknown) => toast(errorMessage(reason, "Could not join the project."), "error")),
-              }))}
-            />
-          ) : null}
           <Button variant="ghost" size="sm" className="shrink-0" icon={<Settings className="size-4" />} onClick={() => setSettingsTab("general")}>
             <span className="hidden sm:inline">Settings</span>
           </Button>
@@ -396,10 +370,7 @@ export function Workspace({
                 )}
               </button>
             )}
-            items={[
-              { label: "New project", icon: <Plus className="size-4" />, onSelect: onConnectRepository },
-              { label: `Sign out${me.githubLogin ? ` @${me.githubLogin}` : ""}`, icon: <LogOut className="size-4" />, onSelect: onSignOut },
-            ]}
+            items={[{ label: `Sign out${me.githubLogin ? ` @${me.githubLogin}` : ""}`, icon: <LogOut className="size-4" />, onSelect: onSignOut }]}
           />
         </div>
       </header>

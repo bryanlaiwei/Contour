@@ -1,6 +1,5 @@
 /**
- * This release is one person's map, grouped with the server OpenAI key.
- * Sharing a project and saving a personal model key stay in the source for later.
+ * An owner can add someone who has already signed in. Saving a personal model key stays off.
  */
-export const releaseSharesProjects = false;
+export const releaseSharesProjects = true;
 export const releaseChoosesModelKey = false;

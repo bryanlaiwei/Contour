@@ -282,19 +282,20 @@ export function workspaceRouter(input: {
     }
     const result = await inviteMember(pool, {
       projectId: allowed.projectId,
-      invitedBy: allowed.user.id,
       githubLogin: account.login,
       githubUserId: account.id,
     });
     switch (result.status) {
-      case "invited":
+      case "added":
         res.status(201).json({ id: result.id });
         return;
       case "already_member":
         res.status(409).json({ error: `@${account.login} is already a member.` });
         return;
-      case "already_invited":
-        res.status(409).json({ error: `@${account.login} already has an open invitation.` });
+      case "not_registered":
+        res.status(400).json({
+          error: `@${account.login} hasn't signed in yet. They need to sign in with GitHub once before you can add them.`,
+        });
         return;
       default: {
         const unhandled: never = result;

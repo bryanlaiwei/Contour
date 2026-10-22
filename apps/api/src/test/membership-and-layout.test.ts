@@ -85,27 +85,24 @@ describe("membership, settings and layout", () => {
     expect(listed.projects).toEqual([expect.objectContaining({ id: projectId, role: "owner" })]);
   });
 
-  it("lets only the invited GitHub account join, and members see the same map", async () => {
+  it("adds a signed-in person as a member, and refuses someone who has never signed in", async () => {
     expect((await call("owner", "/me")).status).toBe(200);
+    expect((await call("mate", "/me")).status).toBe(200);
     expect((await call("owner", `/projects/${projectId}/invitations`, { method: "POST", body: JSON.stringify({ githubLogin: "not a login!" }) })).status).toBe(400);
-    const invited = await call("owner", `/projects/${projectId}/invitations`, { method: "POST", body: JSON.stringify({ githubLogin: "@day4-mate" }) });
-    expect(invited.status).toBe(201);
-    const invitationId = ((await invited.json()) as { id: string }).id;
-    expect((await call("owner", `/projects/${projectId}/invitations`, { method: "POST", body: JSON.stringify({ githubLogin: "DAY4-MATE" }) })).status).toBe(409);
-
-    const strangerView = (await (await call("stranger", "/me")).json()) as { invitations: unknown[] };
-    expect(strangerView.invitations).toEqual([]);
-    expect((await call("stranger", `/invitations/${invitationId}/accept`, { method: "POST" })).status).toBe(403);
+    const unsigned = await call("owner", `/projects/${projectId}/invitations`, { method: "POST", body: JSON.stringify({ githubLogin: "day4-stranger" }) });
+    expect(unsigned.status).toBe(400);
+    expect(await unsigned.json()).toEqual({
+      error: "@day4-stranger hasn't signed in yet. They need to sign in with GitHub once before you can add them.",
+    });
     expect((await call("stranger", `/projects/${projectId}/graph`)).status).toBe(404);
 
-    const mateView = (await (await call("mate", "/me")).json()) as { invitations: Array<{ id: string; project: { owner: string; name: string }; invitedBy: string }> };
-    expect(mateView.invitations).toEqual([
-      expect.objectContaining({ id: invitationId, project: expect.objectContaining({ owner: "day4", name: "team" }), invitedBy: "day4-owner" }),
-    ]);
-    expect((await call("mate", `/invitations/${invitationId}/accept`, { method: "POST" })).status).toBe(201);
-    expect((await call("mate", `/invitations/${invitationId}/accept`, { method: "POST" })).status).toBe(404);
+    const added = await call("owner", `/projects/${projectId}/invitations`, { method: "POST", body: JSON.stringify({ githubLogin: "@day4-mate" }) });
+    expect(added.status).toBe(201);
+    expect((await call("owner", `/projects/${projectId}/invitations`, { method: "POST", body: JSON.stringify({ githubLogin: "DAY4-MATE" }) })).status).toBe(409);
     const mateProjects = (await (await call("mate", "/projects")).json()) as { projects: Array<{ id: string; role: string }> };
     expect(mateProjects.projects).toEqual([expect.objectContaining({ id: projectId, role: "member" })]);
+    const mateView = (await (await call("mate", "/me")).json()) as { invitations: unknown[] };
+    expect(mateView.invitations).toEqual([]);
 
     const ownerGraph = await (await call("owner", `/projects/${projectId}/graph`)).json();
     const mateGraph = await (await call("mate", `/projects/${projectId}/graph`)).json();
@@ -129,19 +126,15 @@ describe("membership, settings and layout", () => {
     expect(settings.health.analysis.waiting).toBe(0);
   });
 
-  it("ties an invitation to the GitHub account, so a renamed login still joins and a reused one does not", async () => {
+  it("adds the GitHub account that owns the login, so a reused login does not get the project", async () => {
     expect((await call("owner", `/projects/${projectId}/invitations`, { method: "POST", body: JSON.stringify({ githubLogin: "no-such-person" }) })).status).toBe(400);
-    const invited = await call("owner", `/projects/${projectId}/invitations`, { method: "POST", body: JSON.stringify({ githubLogin: "day4-renamer" }) });
-    expect(invited.status).toBe(201);
-    const invitationId = ((await invited.json()) as { id: string }).id;
-
-    const squatterView = (await (await call("squatter", "/me")).json()) as { invitations: unknown[] };
-    expect(squatterView.invitations).toEqual([]);
-    expect((await call("squatter", `/invitations/${invitationId}/accept`, { method: "POST" })).status).toBe(403);
-
-    const renamedView = (await (await call("renamed", "/me")).json()) as { invitations: Array<{ id: string }> };
-    expect(renamedView.invitations.map((invitation) => invitation.id)).toEqual([invitationId]);
-    expect((await call("renamed", `/invitations/${invitationId}/accept`, { method: "POST" })).status).toBe(201);
+    expect((await call("renamed", "/me")).status).toBe(200);
+    const added = await call("owner", `/projects/${projectId}/invitations`, { method: "POST", body: JSON.stringify({ githubLogin: "day4-renamer" }) });
+    expect(added.status).toBe(201);
+    const renamedProjects = (await (await call("renamed", "/projects")).json()) as { projects: Array<{ id: string; role: string }> };
+    expect(renamedProjects.projects).toEqual([expect.objectContaining({ id: projectId, role: "member" })]);
+    const squatterProjects = (await (await call("squatter", "/projects")).json()) as { projects: unknown[] };
+    expect(squatterProjects.projects).toEqual([]);
   });
 
   it("lets a person own several repositories, but connects each repository only once", async () => {
@@ -158,13 +151,6 @@ describe("membership, settings and layout", () => {
     const taken = await call("owner", "/projects", { method: "POST", body: JSON.stringify({ owner: "day4", name: "second" }) });
     expect(taken.status).toBe(409);
     expect(await taken.json()).toEqual({ error: "This repository is already connected." });
-  });
-
-  it("revokes an open invitation", async () => {
-    const invited = await call("owner", `/projects/${projectId}/invitations`, { method: "POST", body: JSON.stringify({ githubLogin: "day4-stranger" }) });
-    const invitationId = ((await invited.json()) as { id: string }).id;
-    expect((await call("owner", `/projects/${projectId}/invitations/${invitationId}`, { method: "DELETE" })).status).toBe(204);
-    expect((await call("stranger", `/invitations/${invitationId}/accept`, { method: "POST" })).status).toBe(404);
   });
 
   it("stops a removed member's web access and the helper they paired", async () => {
@@ -235,9 +221,8 @@ describe("membership, settings and layout", () => {
   });
 
   it("lets only an owner delete the project, which removes its data", async () => {
-    const invited = await call("owner", `/projects/${projectId}/invitations`, { method: "POST", body: JSON.stringify({ githubLogin: "day4-mate" }) });
-    const invitationId = ((await invited.json()) as { id: string }).id;
-    expect((await call("mate", `/invitations/${invitationId}/accept`, { method: "POST" })).status).toBe(201);
+    const added = await call("owner", `/projects/${projectId}/invitations`, { method: "POST", body: JSON.stringify({ githubLogin: "day4-mate" }) });
+    expect(added.status).toBe(201);
     expect((await call("mate", `/projects/${projectId}`, { method: "DELETE" })).status).toBe(403);
     await pool.query(
       `insert into webhook_deliveries (delivery_id, event_name, github_repo_id, payload, status)
