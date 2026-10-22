@@ -1,7 +1,6 @@
-import { ArrowLeft, ArrowRight, ExternalLink, LogOut, Mail } from "lucide-react";
+import { ArrowLeft, ArrowRight, ExternalLink, LogOut } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { api, errorMessage, type Me, type Project } from "../api";
-import { releaseSharesProjects } from "../release";
 import { parseRepository, productName } from "../format";
 import { cx } from "../helpers";
 import { GithubMark, LogoMark } from "../ui/GithubMark";
@@ -15,7 +14,6 @@ export function Onboarding({
   me,
   projects,
   onConnected,
-  onJoined,
   onSignOut,
   onCancel,
 }: {
@@ -23,7 +21,6 @@ export function Onboarding({
   me: Me;
   projects: Project[];
   onConnected: (projectId: string) => Promise<void>;
-  onJoined: (projectId: string) => Promise<void>;
   onSignOut: () => void;
   /** Set when the person already has a map to go back to. */
   onCancel?: (() => void) | undefined;
@@ -32,8 +29,6 @@ export function Onboarding({
   const [repository, setRepository] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [joining, setJoining] = useState<string | null>(null);
-  const [joinError, setJoinError] = useState<string | null>(null);
   const parsed = parseRepository(repository);
   const existing = parsed
     ? projects.find((entry) => entry.owner.toLowerCase() === parsed.owner.toLowerCase() && entry.name.toLowerCase() === parsed.name.toLowerCase())
@@ -59,19 +54,6 @@ export function Onboarding({
       setError(errorMessage(reason, "Could not connect the repository."));
     } finally {
       setBusy(false);
-    }
-  }
-
-  async function join(invitationId: string) {
-    setJoining(invitationId);
-    setJoinError(null);
-    try {
-      const body = await api.acceptInvitation(token, invitationId);
-      await onJoined(body.projectId);
-    } catch (reason) {
-      setJoinError(errorMessage(reason, "Could not join the project."));
-    } finally {
-      setJoining(null);
     }
   }
 
@@ -102,28 +84,6 @@ export function Onboarding({
             ? "Each project follows one GitHub repository and gets its own map. Your other projects stay as they are."
             : "Connect a GitHub repository. The map is built from your agent sessions and that repository."}
         </p>
-
-        {releaseSharesProjects && me.invitations.length > 0 ? (
-          <section className="mt-8 space-y-2">
-            {me.invitations.map((invitation) => (
-              <div key={invitation.id} className="animate-in flex items-center gap-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-zinc-200">
-                <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-zinc-100 text-zinc-900">
-                  <Mail className="size-4.5" />
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-zinc-900">
-                    {invitation.project.owner}/{invitation.project.name}
-                  </p>
-                  <p className="truncate text-xs text-zinc-500">{invitation.invitedBy ? `@${invitation.invitedBy} invited you` : "You were invited"}</p>
-                </div>
-                <Button variant="primary" size="sm" loading={joining === invitation.id} onClick={() => void join(invitation.id)}>
-                  Join
-                </Button>
-              </div>
-            ))}
-            <ErrorNote>{joinError}</ErrorNote>
-          </section>
-        ) : null}
 
         <form onSubmit={(event) => void connect(event)} className="mt-8 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-zinc-200">
           <div className="flex items-center gap-2">

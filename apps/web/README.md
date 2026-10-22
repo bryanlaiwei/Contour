@@ -19,8 +19,6 @@ flowchart TD
   map --> settings["Settings shows general, the local helper, and health"]
 ```
 
-This release hides the members and model tabs. `src/release.ts` keeps that source in the tree for a later release.
-
 ## Files
 
 - `package.json` declares the `@apm/web` package, Vite, and React.
@@ -32,7 +30,7 @@ This release hides the members and model tabs. `src/release.ts` keeps that sourc
 - `src/format.ts` labels work-item states, agents, and times.
 - `src/attribution.ts` compares GitHub logins.
 - `src/helpers.ts` joins class names and provides a ticking clock for relative times.
-- `src/release.ts` turns project sharing and personal model keys off for this release.
+- `src/release.ts` leaves project sharing on and turns personal model keys off for this release.
 - `src/pages/` is sign-in, onboarding, the workspace, settings, and the Mac helper download.
 - `src/map/` draws the feature map.
 - `src/panel/` shows one feature or work item, including rename, move, merge, and split.

@@ -121,33 +121,70 @@ export async function acceptInvitation(
   });
 }
 
-/** `githubLogin` and `githubUserId` are the account as GitHub reported it when the invitation was made. */
+type Queryable = {
+  query: Pool["query"];
+};
+
+/** A Contour account that has signed in with this GitHub account id. */
+async function findSignedInGithubUser(db: Queryable, githubUserId: number): Promise<{ userId: string } | null> {
+  const profile = await db.query<{ user_id: string }>(
+    `select user_id from profiles where github_user_id = $1 order by updated_at desc limit 1`,
+    [githubUserId],
+  );
+  const profileUserId = profile.rows[0]?.user_id;
+  if (profileUserId) {
+    return { userId: profileUserId };
+  }
+  // CI uses plain Postgres. A missing auth schema means this person has no Supabase sign-in.
+  const identities = await db.query<{ rel: string | null }>(`select to_regclass('auth.identities') as rel`);
+  if (!identities.rows[0]?.rel) {
+    return null;
+  }
+  const identity = await db.query<{ user_id: string }>(
+    `select user_id from auth.identities
+     where provider = 'github'
+       and (identity_data->>'provider_id' = $1 or identity_data->>'sub' = $1)
+     order by created_at
+     limit 1`,
+    [String(githubUserId)],
+  );
+  const userId = identity.rows[0]?.user_id;
+  return userId ? { userId } : null;
+}
+
+/**
+ * Adds someone who has already signed in. `githubLogin` and `githubUserId` are the account as GitHub
+ * reported it. Someone with no Contour sign-in is refused, and no invitation is stored.
+ */
 export async function inviteMember(
   pool: Pool,
-  input: { projectId: string; invitedBy: string; githubLogin: string; githubUserId: number },
-): Promise<{ status: "invited"; id: string } | { status: "already_member" | "already_invited" }> {
+  input: { projectId: string; githubLogin: string; githubUserId: number },
+): Promise<{ status: "added"; id: string } | { status: "already_member" | "not_registered" }> {
   return inTransaction(pool, async (client) => {
     const project = await client.query<{ workspace_id: string }>(`select workspace_id from projects where id = $1 for update`, [input.projectId]);
     const workspaceId = project.rows[0]?.workspace_id;
     if (!workspaceId) {
-      throw new Error("Project disappeared while inviting.");
+      throw new Error("Project disappeared while adding a member.");
     }
-    const member = await client.query(
-      `select 1 from memberships m join profiles p on p.user_id = m.user_id
-       where m.workspace_id = $1 and (p.github_user_id = $3 or (p.github_user_id is null and lower(p.github_login) = lower($2)))`,
-      [workspaceId, input.githubLogin, input.githubUserId],
-    );
+    const person = await findSignedInGithubUser(client, input.githubUserId);
+    if (!person) {
+      return { status: "not_registered" as const };
+    }
+    const member = await client.query(`select 1 from memberships where workspace_id = $1 and user_id = $2`, [workspaceId, person.userId]);
     if ((member.rowCount ?? 0) > 0) {
       return { status: "already_member" as const };
     }
-    const inserted = await client.query<{ id: string }>(
-      `insert into invitations (workspace_id, github_login, github_user_id, invited_by) values ($1, $2, $3, $4)
-       on conflict do nothing
-       returning id`,
-      [workspaceId, input.githubLogin, input.githubUserId, input.invitedBy],
+    await client.query(`insert into memberships (workspace_id, user_id, role) values ($1, $2, 'member')`, [workspaceId, person.userId]);
+    await client.query(
+      `insert into profiles (user_id, github_login, github_user_id, updated_at)
+       values ($1, $2, $3, now())
+       on conflict (user_id) do update
+         set github_login = coalesce(profiles.github_login, excluded.github_login),
+             github_user_id = coalesce(profiles.github_user_id, excluded.github_user_id),
+             updated_at = now()`,
+      [person.userId, input.githubLogin, input.githubUserId],
     );
-    const id = inserted.rows[0]?.id;
-    return id ? { status: "invited" as const, id } : { status: "already_invited" as const };
+    return { status: "added" as const, id: person.userId };
   });
 }
 

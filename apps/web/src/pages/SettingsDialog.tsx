@@ -223,7 +223,7 @@ function MembersTab({ token, settings, reload, onLeft }: { token: string; settin
       await api.invite(token, settings.project.id, name);
       setLogin("");
       await reload();
-      toast(`Invited @${name}`);
+      toast(`Added @${name}`);
     } catch (reason) {
       setError(errorMessage(reason, "Could not send the invitation."));
     } finally {
@@ -254,7 +254,7 @@ function MembersTab({ token, settings, reload, onLeft }: { token: string; settin
               Invite
             </Button>
           </div>
-          <p className="text-xs text-zinc-500">They sign in here with that GitHub account and accept the invitation. Members see the same map.</p>
+          <p className="text-xs text-zinc-500">They need to have signed in here with that GitHub account. The project then shows up in their project menu.</p>
           <ErrorNote>{error}</ErrorNote>
         </form>
       ) : null}

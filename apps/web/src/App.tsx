@@ -61,6 +61,16 @@ function AppContent() {
     void loadAccount();
   }, [loadAccount]);
 
+  useEffect(() => {
+    if (!token) {
+      return;
+    }
+    const timer = window.setInterval(() => {
+      void loadAccount();
+    }, 15_000);
+    return () => window.clearInterval(timer);
+  }, [token, loadAccount]);
+
   const chooseProject = useCallback((id: string | null) => {
     setProjectId(id);
     if (id) {
@@ -129,7 +139,6 @@ function AppContent() {
         me={account.me}
         projects={account.projects}
         onConnected={openProject}
-        onJoined={openProject}
         onSignOut={() => void signOut()}
         onCancel={project ? () => setConnecting(false) : undefined}
       />
@@ -140,11 +149,9 @@ function AppContent() {
       key={project.id}
       token={token}
       me={account.me.user}
-      invitations={account.me.invitations}
       project={project}
       projects={account.projects}
       onSwitchProject={chooseProject}
-      onJoined={openProject}
       onSignOut={() => void signOut()}
       onProjectGone={projectGone}
       onConnectRepository={() => setConnecting(true)}
