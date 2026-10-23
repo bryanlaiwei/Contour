@@ -6,6 +6,7 @@ const pairingTtlMs = 10 * 60 * 1000;
 export type HelperDevice = {
   id: string;
   projectId: string;
+  userId: string;
   trackingStartedAt: string;
 };
 
@@ -72,6 +73,7 @@ export async function exchangePairingCode(
       device: {
         id,
         projectId: row.project_id,
+        userId: row.user_id,
         trackingStartedAt: row.tracking_started_at.toISOString(),
       },
     };
@@ -88,22 +90,28 @@ export async function findHelperDevice(pool: Pool, token: string): Promise<Helpe
   if (token.trim() === "") {
     return null;
   }
-  const result = await pool.query<{ id: string; project_id: string; tracking_started_at: Date }>(
+  const result = await pool.query<{ id: string; project_id: string; user_id: string; tracking_started_at: Date }>(
     `with seen as (
        update collector_tokens set last_seen_at = now()
        where token_hash = $1 and revoked_at is null
-       returning id, project_id
+       returning id, project_id, user_id
      )
-     select seen.id, seen.project_id, p.tracking_started_at
+     select seen.id, seen.project_id, seen.user_id, p.tracking_started_at
      from seen
-     join projects p on p.id = seen.project_id`,
+     join projects p on p.id = seen.project_id
+     where seen.user_id is not null`,
     [hashHelperSecret(token)],
   );
   const row = result.rows[0];
   if (!row) {
     return null;
   }
-  return { id: row.id, projectId: row.project_id, trackingStartedAt: row.tracking_started_at.toISOString() };
+  return {
+    id: row.id,
+    projectId: row.project_id,
+    userId: row.user_id,
+    trackingStartedAt: row.tracking_started_at.toISOString(),
+  };
 }
 
 export async function revokeHelperToken(pool: Pool, token: string): Promise<boolean> {

@@ -125,10 +125,10 @@ function isRepoIdConflict(error: unknown): boolean {
 }
 
 export async function insertEvents(pool: Pool, events: NormalizedEvent[]): Promise<number> {
-  return insertEventsWith(pool, events);
+  return insertEventsWith(pool, events, null);
 }
 
-export async function insertEventsWith(db: Queryable, events: NormalizedEvent[]): Promise<number> {
+export async function insertEventsWith(db: Queryable, events: NormalizedEvent[], uploadedBy: string | null): Promise<number> {
   // One insert cannot accept the same event id twice, so a repeated id keeps the first row.
   const seen = new Set<string>();
   const incoming: NormalizedEvent[] = [];
@@ -145,8 +145,8 @@ export async function insertEventsWith(db: Queryable, events: NormalizedEvent[])
   }
   const result = await db.query(
     `insert into normalized_events
-      (event_id, source_key, project_id, source, kind, occurred_at, details, schema_version)
-     select event_id, source_key, project_id, source, kind, occurred_at, details::jsonb, schema_version
+      (event_id, source_key, project_id, source, kind, occurred_at, details, schema_version, uploaded_by)
+     select event_id, source_key, project_id, source, kind, occurred_at, details::jsonb, schema_version, $9::uuid
      from unnest($1::text[], $2::text[], $3::uuid[], $4::text[], $5::text[], $6::timestamptz[], $7::text[], $8::int[])
        as incoming(event_id, source_key, project_id, source, kind, occurred_at, details, schema_version)
      on conflict (event_id) do nothing`,
@@ -159,6 +159,7 @@ export async function insertEventsWith(db: Queryable, events: NormalizedEvent[])
       incoming.map((event) => event.occurredAt),
       incoming.map((event) => JSON.stringify(event.details)),
       incoming.map((event) => event.schemaVersion),
+      uploadedBy,
     ],
   );
   return result.rowCount ?? 0;
