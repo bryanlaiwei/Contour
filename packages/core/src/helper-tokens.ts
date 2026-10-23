@@ -37,6 +37,22 @@ export async function exchangePairingCode(
   const client = await pool.connect();
   try {
     await client.query("begin");
+    const codeHash = hashHelperSecret(input.code);
+    // Removal locks the membership before it revokes tokens. Locking that row first makes the exchange
+    // wait, so it cannot insert a token after the member is already gone.
+    const member = await client.query(
+      `select 1
+       from collector_pairing_codes c
+       join projects p on p.id = c.project_id
+       join memberships m on m.workspace_id = p.workspace_id and m.user_id = c.user_id
+       where c.code_hash = $1 and c.used_at is null and c.expires_at > $2
+       for update of m`,
+      [codeHash, now.toISOString()],
+    );
+    if ((member.rowCount ?? 0) === 0) {
+      await client.query("rollback");
+      return { error: "invalid_code" };
+    }
     const found = await client.query<{ project_id: string; user_id: string; tracking_started_at: Date; project_name: string }>(
       `select c.project_id, c.user_id, p.tracking_started_at, p.github_owner || '/' || p.github_name as project_name
        from collector_pairing_codes c
@@ -44,7 +60,7 @@ export async function exchangePairingCode(
        join memberships m on m.workspace_id = p.workspace_id and m.user_id = c.user_id
        where c.code_hash = $1 and c.used_at is null and c.expires_at > $2
        for update of c`,
-      [hashHelperSecret(input.code), now.toISOString()],
+      [codeHash, now.toISOString()],
     );
     const row = found.rows[0];
     if (!row) {
@@ -52,7 +68,7 @@ export async function exchangePairingCode(
       return { error: "invalid_code" };
     }
     await client.query(`update collector_pairing_codes set used_at = $2 where code_hash = $1`, [
-      hashHelperSecret(input.code),
+      codeHash,
       now.toISOString(),
     ]);
     const token = `apm_${randomBytes(32).toString("base64url")}`;
@@ -85,21 +101,22 @@ export async function exchangePairingCode(
   }
 }
 
-/** Finds the device behind a token and records that it was seen, for the Settings device list. */
+/** Finds a current member's device for a token and records that it was seen, for the Settings device list. */
 export async function findHelperDevice(pool: Pool, token: string): Promise<HelperDevice | null> {
   if (token.trim() === "") {
     return null;
   }
   const result = await pool.query<{ id: string; project_id: string; user_id: string; tracking_started_at: Date }>(
-    `with seen as (
-       update collector_tokens set last_seen_at = now()
-       where token_hash = $1 and revoked_at is null
-       returning id, project_id, user_id
-     )
-     select seen.id, seen.project_id, seen.user_id, p.tracking_started_at
-     from seen
-     join projects p on p.id = seen.project_id
-     where seen.user_id is not null`,
+    `update collector_tokens t
+     set last_seen_at = now()
+     from projects p, memberships m
+     where t.token_hash = $1
+       and t.revoked_at is null
+       and t.user_id is not null
+       and p.id = t.project_id
+       and m.workspace_id = p.workspace_id
+       and m.user_id = t.user_id
+     returning t.id, t.project_id, t.user_id, p.tracking_started_at`,
     [hashHelperSecret(token)],
   );
   const row = result.rows[0];
