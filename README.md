@@ -30,7 +30,7 @@ A live map of your project, built automatically from GitHub activities and local
 
 ## The problem
 
-A pull request, a CI run, and a coding-agent session are three records of the same work, and they live in different places. Contour puts them on one map automatically: what is being built, what state it is in, and what it depends on.
+A pull request, a CI run, and a coding-agent session are three records of the same work, and across you and your team they live in different places. Contour puts them on one map automatically: what is being built, what state it is in, and what it depends on.
 
 ## How it fits together
 
