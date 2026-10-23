@@ -46,7 +46,7 @@ flowchart LR
   api --> web["Web map"]
 ```
 
-The helper runs on your computer. About every 30 seconds it scans `~/.codex/sessions`, `~/.claude/projects`, and `~/.cursor/projects`, keeps a checkpoint per session in SQLite, and uploads only new text.
+The helper runs on each project member's computer. About every 30 seconds it scans `~/.codex/sessions`, `~/.claude/projects`, and `~/.cursor/projects`, keeps a checkpoint per session in SQLite, and uploads only new text.
 
 GitHub reaches the API through a webhook. The API stores the delivery and answers immediately. The worker then loads the current pull request or workflow run and writes facts: pull requests, reviews, workflow runs, and evidence. Facts never wait for the model. When a server OpenAI key is set, the model groups evidence that has settled into the map. The browser only reads that map.
 
