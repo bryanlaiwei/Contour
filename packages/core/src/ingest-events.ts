@@ -14,7 +14,7 @@ export type IngestEventsResult = {
 
 export async function ingestEvents(
   pool: Pool,
-  input: { projectId: string; events: unknown[] },
+  input: { projectId: string; events: unknown[]; uploadedBy?: string },
 ): Promise<IngestEventsResult> {
   const project = await pool.query<{ tracking_started_at: Date }>(
     `select tracking_started_at from projects where id = $1`,
@@ -57,7 +57,7 @@ export async function ingestEvents(
   const client = await pool.connect();
   try {
     await client.query("begin");
-    const stored = await insertAndList(client, input.projectId, accepted);
+    const stored = await insertAndList(client, input.projectId, accepted, input.uploadedBy ?? null);
     await client.query("commit");
     return { acknowledged: stored.acknowledged, rejected: [...rejected, ...stored.rejected] };
   } catch (error) {
@@ -73,11 +73,12 @@ async function insertAndList(
   client: PoolClient,
   projectId: string,
   events: NormalizedEvent[],
+  uploadedBy: string | null,
 ): Promise<{ acknowledged: string[]; rejected: IngestRejection[] }> {
   if (events.length === 0) {
     return { acknowledged: [], rejected: [] };
   }
-  await insertEventsWith(client, events);
+  await insertEventsWith(client, events, uploadedBy);
   const ids = events.map((event) => event.eventId);
   const existing = await client.query<{ event_id: string; project_id: string }>(
     `select event_id, project_id from normalized_events where event_id = any($1::text[])`,

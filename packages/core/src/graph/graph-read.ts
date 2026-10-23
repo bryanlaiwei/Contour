@@ -42,12 +42,14 @@ export async function readGraph(pool: Pool, projectId: string): Promise<Graph | 
     pulls: number[];
     agents: string[];
     people: string[];
+    session_people: string[];
     last_activity: Date | null;
   }>(
     `select wi.id, wi.feature_id, wi.title, wi.state, wi.state_basis, wi.blocked,
             coalesce(pr.pulls, '{}') as pulls,
             coalesce(pr.people, '{}') as people,
             coalesce(ev.agents, '{}') as agents,
+            coalesce(ev.session_people, '{}') as session_people,
             greatest(pr.last_at, ev.last_at) as last_activity
      from work_items wi
      left join lateral (
@@ -60,9 +62,12 @@ export async function readGraph(pool: Pool, projectId: string): Promise<Graph | 
      ) pr on true
      left join lateral (
        select array_agg(distinct e.source) filter (where e.kind = 'session_excerpt') as agents,
+              array_agg(distinct prof.github_login) filter (where e.kind = 'session_excerpt' and prof.github_login is not null) as session_people,
               max(e.observed_at) as last_at
        from work_item_evidence we
        join evidence e on e.id = we.evidence_id
+       left join normalized_events ne on ne.event_id = e.event_id
+       left join profiles prof on prof.user_id = ne.uploaded_by
        where we.work_item_id = wi.id
      ) ev on true
      where wi.project_id = $1 and wi.retired_into is null
@@ -110,7 +115,7 @@ export async function readGraph(pool: Pool, projectId: string): Promise<Graph | 
           counts,
           contributors: {
             agents: sortedUnique(rows.flatMap((item) => item.agents)),
-            people: sortedUnique(rows.flatMap((item) => item.people)),
+            people: sortedUnique(rows.flatMap((item) => [...item.people, ...item.session_people])),
           },
           lastActivityAt: activity.length > 0 ? activity.reduce((max, value) => (value > max ? value : max)) : null,
           workItems,
@@ -244,10 +249,13 @@ export async function readWorkItem(pool: Pool, projectId: string, requestedId: s
     excerpt: string;
     observed_at: Date;
     basis: Basis;
+    uploader: string | null;
   }>(
-    `select e.id, e.kind, e.source, e.session_id, e.excerpt, e.observed_at, we.basis
+    `select e.id, e.kind, e.source, e.session_id, e.excerpt, e.observed_at, we.basis, prof.github_login as uploader
      from work_item_evidence we
      join evidence e on e.id = we.evidence_id
+     left join normalized_events ne on ne.event_id = e.event_id
+     left join profiles prof on prof.user_id = ne.uploaded_by
      where we.work_item_id = $1
      order by e.observed_at desc, e.id`,
     [id],
@@ -262,7 +270,10 @@ export async function readWorkItem(pool: Pool, projectId: string, requestedId: s
 
   const contributors: Contributors = {
     agents: sortedUnique(evidence.rows.filter((row) => row.kind === "session_excerpt").map((row) => row.source)),
-    people: sortedUnique(pullStates.flatMap((pull) => (pull.state.author ? [pull.state.author] : []))),
+    people: sortedUnique([
+      ...pullStates.flatMap((pull) => (pull.state.author ? [pull.state.author] : [])),
+      ...evidence.rows.flatMap((row) => (row.kind === "session_excerpt" && row.uploader ? [row.uploader] : [])),
+    ]),
   };
 
   return workItemDetailSchema.parse({
@@ -342,7 +353,16 @@ export async function readFeature(pool: Pool, projectId: string, requestedId: st
      from work_items wi
      join work_item_artifacts wa on wa.work_item_id = wi.id
      join artifacts a on a.id = wa.artifact_id
-     where wi.feature_id = $1 and wi.retired_into is null and a.state->>'author' is not null`,
+     where wi.feature_id = $1 and wi.retired_into is null and a.state->>'author' is not null
+     union
+     select distinct prof.github_login as name
+     from work_items wi
+     join work_item_evidence we on we.work_item_id = wi.id
+     join evidence e on e.id = we.evidence_id
+     join normalized_events ne on ne.event_id = e.event_id
+     join profiles prof on prof.user_id = ne.uploaded_by
+     where wi.feature_id = $1 and wi.retired_into is null
+       and e.kind = 'session_excerpt' and prof.github_login is not null`,
     [id],
   );
   const agents = await pool.query<{ name: string }>(

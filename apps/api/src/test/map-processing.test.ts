@@ -7,7 +7,7 @@ import { loadEnvFile } from "@apm/core/config";
 import { ingestEvents } from "@apm/core/ingest-events";
 import { applyCorrection } from "@apm/core/graph/corrections";
 import { renderContext, type InterpretationContext } from "@apm/core/graph/context";
-import { readGraph, readWorkItem } from "@apm/core/graph/graph-read";
+import { readFeature, readGraph, readWorkItem } from "@apm/core/graph/graph-read";
 import { processProject, type Interpreter } from "@apm/core/graph/process";
 import { proposalSchema, type Proposal, type ProposalOperation } from "@apm/core/graph/proposal";
 import { connectRepository, insertEvents } from "@apm/core/store";
@@ -71,10 +71,12 @@ async function sessionContent(
   sessionId: string,
   messages: SessionMessage[],
   eventKey: string,
+  uploadedBy?: string,
 ) {
   const common = { schemaVersion: SCHEMA_VERSION, projectId: project.id, source, occurredAt: project.at(0) };
   const result = await ingestEvents(pool, {
     projectId: project.id,
+    ...(uploadedBy ? { uploadedBy } : {}),
     events: [
       {
         ...common,
@@ -108,6 +110,7 @@ function session(
   sessionId: string,
   second: number,
   turns: Array<["user" | "assistant", string]>,
+  uploadedBy?: string,
 ) {
   const messages = turns.map(([role, text], index) => ({
     id: `${sessionId}-${second}-${index}`,
@@ -115,7 +118,7 @@ function session(
     text,
     occurredAt: project.at(second + index),
   }));
-  return sessionContent(project, source, sessionId, messages, `content:${second}`);
+  return sessionContent(project, source, sessionId, messages, `content:${second}`, uploadedBy);
 }
 
 async function pullRequest(
@@ -1068,5 +1071,39 @@ describe("interpretation and map maintenance", () => {
     const after = await onlyWorkItems(project);
     expect(after.graph.features.map((feature) => feature.title)).toEqual(["Theming"]);
     expect(after.items.map((item) => item.title)).toEqual(["Dark mode toggle", "High-contrast theme"]);
+  });
+
+  it("lists both members when their sessions are grouped onto one feature", async () => {
+    const project = await newProject("session-people", 20);
+    const mateId = "d3000000-0000-4000-8000-000000000120";
+    await pool.query(
+      `insert into profiles (user_id, github_login) values ($1, 'day3-owner'), ($2, 'day3-mate')
+       on conflict (user_id) do update set github_login = excluded.github_login`,
+      [project.userId, mateId],
+    );
+    try {
+      const ai = new ScriptedInterpreter();
+      await session(project, "cursor", "owner-billing", 10, [["user", "Sketch the billing page"]], project.userId);
+      await session(project, "cursor", "mate-billing", 20, [["user", "Add the invoice table to billing"]], mateId);
+      ai.then((context) => ({
+        operations: [
+          op.feature("new:billing", "Billing", allEvidence(context)),
+          op.item("new:page", "new:billing", "Billing page", allEvidence(context), "in_progress"),
+        ],
+      }));
+      await run(project, ai);
+
+      const shown = await onlyWorkItems(project);
+      expect(shown.graph.features).toHaveLength(1);
+      expect(shown.graph.features[0]?.contributors).toEqual({ agents: ["cursor"], people: ["day3-mate", "day3-owner"] });
+      const featureId = shown.graph.features[0]?.id ?? "";
+      const workItemId = shown.items[0]?.id ?? "";
+      const feature = await readFeature(pool, project.id, featureId);
+      const detail = await readWorkItem(pool, project.id, workItemId);
+      expect(feature?.contributors).toEqual({ agents: ["cursor"], people: ["day3-mate", "day3-owner"] });
+      expect(detail?.contributors).toEqual({ agents: ["cursor"], people: ["day3-mate", "day3-owner"] });
+    } finally {
+      await pool.query("delete from profiles where user_id = any($1::uuid[])", [[project.userId, mateId]]);
+    }
   });
 });

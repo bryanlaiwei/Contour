@@ -329,7 +329,7 @@ export function createApp(deps: AppDeps) {
       res.status(404).json({ error: "Project not found." });
       return;
     }
-    const result = await ingestEvents(deps.pool, parsed.data);
+    const result = await ingestEvents(deps.pool, { ...parsed.data, uploadedBy: allowed.uploadedBy });
     res.status(202).json(result);
   });
 
@@ -340,18 +340,18 @@ async function canIngest(
   deps: AppDeps,
   req: Request,
   projectId: string,
-): Promise<"ok" | "unauthorized" | "forbidden"> {
+): Promise<{ uploadedBy: string } | "unauthorized" | "forbidden"> {
   const token = bearerToken(req);
   if (token === "") {
     return "unauthorized";
   }
   const device = await findHelperDevice(deps.pool, token);
   if (device) {
-    return device.projectId === projectId ? "ok" : "forbidden";
+    return device.projectId === projectId ? { uploadedBy: device.userId } : "forbidden";
   }
   const user = await deps.verifyUser(token);
   if (!user) {
     return "unauthorized";
   }
-  return (await userCanAccessProject(deps.pool, user.id, projectId)) ? "ok" : "forbidden";
+  return (await userCanAccessProject(deps.pool, user.id, projectId)) ? { uploadedBy: user.id } : "forbidden";
 }

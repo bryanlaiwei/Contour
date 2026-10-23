@@ -119,8 +119,11 @@ describe("session upload and GitHub enrichment", () => {
     const second = await postEvents(device.token, [eligible]);
     const again = (await second.json()) as { acknowledged: string[] };
     expect(again.acknowledged).toEqual(["codex:day2-session:started"]);
-    const stored = await pool.query("select event_id from normalized_events where event_id = $1", ["codex:day2-session:started"]);
+    const stored = await pool.query<{ uploaded_by: string }>("select uploaded_by from normalized_events where event_id = $1", [
+      "codex:day2-session:started",
+    ]);
     expect(stored.rowCount).toBe(1);
+    expect(stored.rows[0]?.uploaded_by).toBe(userId);
 
     const revoked = await fetch(`${baseUrl}/helper/token`, {
       method: "DELETE",
@@ -158,6 +161,10 @@ describe("session upload and GitHub enrichment", () => {
       expect(response.status).toBe(202);
       const body = (await response.json()) as { acknowledged: string[]; rejected: Array<{ eventId: string; reason: string }> };
       expect(body.acknowledged).toEqual([fine.eventId]);
+      const signedIn = await pool.query<{ uploaded_by: string }>("select uploaded_by from normalized_events where event_id = $1", [
+        fine.eventId,
+      ]);
+      expect(signedIn.rows[0]?.uploaded_by).toBe(userId);
       expect(body.rejected).toEqual(
         expect.arrayContaining([
           { eventId: shared.eventId, reason: "event_id_in_other_project" },
