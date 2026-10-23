@@ -11,6 +11,8 @@ import { GithubMark } from "../ui/GithubMark";
 import { useToast } from "../ui/toast-context";
 
 const at = "2026-10-08T15:00:00.000Z";
+const viewerLogin = "ada-sample";
+const teammateLogin = "leo-sample";
 
 type Demo = {
   graph: Graph;
@@ -33,7 +35,14 @@ function run(id: string, conclusion: "success" | "failure"): WorkflowRun {
   };
 }
 
-function pull(number: number, title: string, mode: "merged" | "open" | "draft", conclusion: "success" | "failure" | null): PullRequestDetail {
+function pull(
+  number: number,
+  title: string,
+  mode: "merged" | "open" | "draft",
+  conclusion: "success" | "failure" | null,
+  author: string,
+  review?: { reviewer: string; decision: "approved" | "changes_requested" },
+): PullRequestDetail {
   return {
     artifactId: `pr-${number}`,
     number,
@@ -42,8 +51,8 @@ function pull(number: number, title: string, mode: "merged" | "open" | "draft", 
     state: mode === "merged" ? "closed" : "open",
     draft: mode === "draft",
     merged: mode === "merged",
-    author: null,
-    reviews: [],
+    author,
+    reviews: review ? [{ reviewId: number, reviewer: review.reviewer, decision: review.decision, submittedAt: at }] : [],
     basis: "observed",
     runs: conclusion ? [run(`run-${number}`, conclusion)] : [],
   };
@@ -73,6 +82,7 @@ function item(input: {
   summary: string;
   state: WorkItemState;
   agent: string;
+  people: string[];
   pullRequest: PullRequestDetail | null;
   asked: string;
   answer: string;
@@ -86,7 +96,7 @@ function item(input: {
     summary: { value: input.summary, basis: "observed" },
     state: { value: input.state, basis: "observed" },
     blocked: input.blocked ? { reason: input.blocked } : null,
-    contributors: { agents: [input.agent], people: [] },
+    contributors: { agents: [input.agent], people: input.people },
     pullRequests: input.pullRequest ? [input.pullRequest] : [],
     evidence: [session(`${input.id}-session`, input.agent, input.asked, input.answer)],
     relationships: input.dependsOn
@@ -103,7 +113,13 @@ function item(input: {
   };
 }
 
-function feature(id: string, title: string, summary: string, agent: string, workItems: WorkItemDetail[]): FeatureDetail {
+function feature(
+  id: string,
+  title: string,
+  summary: string,
+  contributors: { agents: string[]; people: string[] },
+  workItems: WorkItemDetail[],
+): FeatureDetail {
   return {
     id,
     title: { value: title, basis: "observed" },
@@ -116,7 +132,7 @@ function feature(id: string, title: string, summary: string, agent: string, work
       stateBasis: entry.state.basis,
       blocked: entry.blocked !== null,
     })),
-    contributors: { agents: [agent], people: [] },
+    contributors,
     history: [history(1, "created", null, { title }, "observed")],
   };
 }
@@ -154,7 +170,8 @@ function buildDemo(): Demo {
     summary: "Order results by how well they match the query.",
     state: "merged",
     agent: "cursor",
-    pullRequest: pull(128, "Rank results by relevance", "merged", "success"),
+    people: [viewerLogin],
+    pullRequest: pull(128, "Rank results by relevance", "merged", "success", viewerLogin),
     asked: "Rank the results by how well they match the query.",
     answer: "Sorted them by match score, and kept the previous order when a score is missing.",
   });
@@ -166,7 +183,8 @@ function buildDemo(): Demo {
     summary: "Mark the words from the query in each result.",
     state: "merged",
     agent: "cursor",
-    pullRequest: pull(132, "Highlight matching words", "merged", "success"),
+    people: [teammateLogin],
+    pullRequest: pull(132, "Highlight matching words", "merged", "success", teammateLogin),
     asked: "Highlight the words from the query inside each result.",
     answer: "Wrapped the matching words so they show in bold.",
   });
@@ -178,7 +196,8 @@ function buildDemo(): Demo {
     summary: "Restore the filter when someone comes back.",
     state: "in_review",
     agent: "claude_code",
-    pullRequest: pull(141, "Remember the last filter", "open", "failure"),
+    people: [teammateLogin],
+    pullRequest: pull(141, "Remember the last filter", "open", "failure", teammateLogin, { reviewer: viewerLogin, decision: "changes_requested" }),
     asked: "Remember the last filter when someone comes back.",
     answer: "Stored the filter with the account and restored it on the next visit.",
     blocked: "Search results are not finished.",
@@ -192,13 +211,14 @@ function buildDemo(): Demo {
     summary: "Email a short list of new items once a week.",
     state: "in_progress",
     agent: "codex",
-    pullRequest: pull(96, "Send a weekly digest", "draft", null),
+    people: [viewerLogin],
+    pullRequest: pull(96, "Send a weekly digest", "draft", null, viewerLogin),
     asked: "Send a short email once a week with the new items.",
     answer: "Drafted the weekly email and left the send time unset.",
   });
-  const search = feature("search", "Search results", "How results are ordered and marked.", "cursor", [rank, highlight]);
-  const filters = feature("filters", "Saved filters", "Filters people can come back to.", "claude_code", [saved]);
-  const digest = feature("digest", "Email digest", "A weekly note about new items.", "codex", [weekly]);
+  const search = feature("search", "Search results", "How results are ordered and marked.", { agents: ["cursor"], people: [viewerLogin, teammateLogin] }, [rank, highlight]);
+  const filters = feature("filters", "Saved filters", "Filters people can come back to.", { agents: ["claude_code"], people: [teammateLogin] }, [saved]);
+  const digest = feature("digest", "Email digest", "A weekly note about new items.", { agents: ["codex"], people: [viewerLogin] }, [weekly]);
   const items = { rank, highlight, "saved-filter": saved, weekly };
   return {
     features: { search, filters, digest },
@@ -222,7 +242,8 @@ function buildNotes(): Demo {
     summary: "Save a note with a title and a body.",
     state: "merged",
     agent: "cursor",
-    pullRequest: pull(12, "Write a note", "merged", "success"),
+    people: [viewerLogin],
+    pullRequest: pull(12, "Write a note", "merged", "success", viewerLogin),
     asked: "Let me write a note and come back to it later.",
     answer: "Saved the title and the body, and opened the note again after a refresh.",
   });
@@ -234,7 +255,8 @@ function buildNotes(): Demo {
     summary: "Let someone else read a notebook.",
     state: "in_review",
     agent: "claude_code",
-    pullRequest: pull(19, "Share a notebook", "open", "failure"),
+    people: [teammateLogin],
+    pullRequest: pull(19, "Share a notebook", "open", "failure", teammateLogin, { reviewer: viewerLogin, decision: "approved" }),
     asked: "Let me share a notebook with another person.",
     answer: "Added a link that opens the notebook as read-only.",
     blocked: "The notebook is not ready to share.",
@@ -248,13 +270,14 @@ function buildNotes(): Demo {
     summary: "Send a reminder the next day.",
     state: "in_progress",
     agent: "codex",
-    pullRequest: pull(23, "Remind me tomorrow", "draft", null),
+    people: [viewerLogin, teammateLogin],
+    pullRequest: pull(23, "Remind me tomorrow", "draft", null, viewerLogin),
     asked: "Remind me about a note tomorrow morning.",
     answer: "Drafted the reminder and left the time unset.",
   });
-  const notebook = feature("notebook", "Notebook", "Notes a person can write and reopen.", "cursor", [write]);
-  const sharing = feature("sharing", "Sharing", "Who else can read a notebook.", "claude_code", [share]);
-  const reminders = feature("reminders", "Reminders", "A nudge about a note.", "codex", [remind]);
+  const notebook = feature("notebook", "Notebook", "Notes a person can write and reopen.", { agents: ["cursor"], people: [viewerLogin] }, [write]);
+  const sharing = feature("sharing", "Sharing", "Who else can read a notebook.", { agents: ["claude_code"], people: [teammateLogin] }, [share]);
+  const reminders = feature("reminders", "Reminders", "A nudge about a note.", { agents: ["codex"], people: [viewerLogin, teammateLogin] }, [remind]);
   return {
     features: { notebook, sharing, reminders },
     items: { write, share, remind },
@@ -407,7 +430,7 @@ export function SampleMap() {
       <MapCanvas
         key={projectId}
         projectId={`sample-map-${projectId}`}
-        viewerLogin={null}
+        viewerLogin={viewerLogin}
         graph={demo.graph}
         positions={positions}
         expanded={expanded}
@@ -497,7 +520,7 @@ export function SampleMap() {
               onSelectFeature={selectFeature}
               onChanged={async () => undefined}
               onGone={closePanel}
-              viewerLogin={null}
+              viewerLogin={viewerLogin}
               local={{
                 feature: selectedFeature,
                 rename: async (title) => {
@@ -557,7 +580,7 @@ export function SampleMap() {
               onSelectFeature={selectFeature}
               onChanged={async () => undefined}
               onGone={closePanel}
-              viewerLogin={null}
+              viewerLogin={viewerLogin}
               local={{
                 item: selectedItem,
                 rename: async (title) => {
@@ -638,6 +661,7 @@ export function SampleMap() {
                       summary: "",
                       state: "planned",
                       agent: source.contributors.agents[0] ?? "cursor",
+                      people: source.contributors.people,
                       pullRequest: movedPulls[0] ?? null,
                       asked: "Continue this as its own piece of work.",
                       answer: "Split it out from the original item.",
