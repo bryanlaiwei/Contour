@@ -133,6 +133,11 @@ function MapCanvasInner({
   const container = useRef<HTMLDivElement>(null);
   const selectedExpanded = selectedFeatureId !== null && expanded.has(selectedFeatureId);
   const [legendOpen, setLegendOpen] = useState(false);
+  useEffect(() => {
+    if (panelOpen) {
+      setLegendOpen(false);
+    }
+  }, [panelOpen]);
 
   useEffect(() => {
     if (!selectedFeatureId || !panelOpen) {
@@ -256,31 +261,33 @@ function MapCanvasInner({
           className="bg-[#f5f5f7]"
         >
           <Background variant={BackgroundVariant.Dots} gap={24} size={1.15} color="#e4e4e7" />
-          <Panel position="top-right" style={{ marginTop: 16, marginRight: panelOpen ? 468 : 16 }}>
-            <div className="relative w-max">
-              <button
-                type="button"
-                aria-expanded={legendOpen}
-                onClick={() => setLegendOpen((open) => !open)}
-                className="flex items-center gap-1.5 rounded-xl bg-white px-2.5 py-1.5 text-left text-xs font-medium text-zinc-700 shadow-sm ring-1 ring-zinc-200"
-              >
-                <span>{legendLabel}</span>
-                <ChevronDown className={cx("size-3.5 text-zinc-400 transition-transform duration-200 ease-out", legendOpen && "rotate-180")} />
-              </button>
-              <Disclosure open={legendOpen} className="absolute top-full right-0 z-10 mt-1 w-max max-w-72 rounded-xl bg-white shadow-sm ring-1 ring-zinc-200">
-                <ul className="w-max max-w-72 space-y-2 px-2.5 py-2.5">
-                  {(Object.keys(legendDetail) as WorkItemState[]).map((state) => (
-                    <li key={state} className="flex items-start gap-2 text-xs text-zinc-600">
-                      <span className={cx("mt-1 size-2 shrink-0 rounded-full", stateMeta[state].dot)} />
-                      <span>
-                        <span className="font-medium text-zinc-800">{stateMeta[state].label}.</span> {legendDetail[state]}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </Disclosure>
-            </div>
-          </Panel>
+          {panelOpen ? null : (
+            <Panel position="top-right" style={{ marginTop: 16, marginRight: 16 }}>
+              <div className="relative w-max">
+                <button
+                  type="button"
+                  aria-expanded={legendOpen}
+                  onClick={() => setLegendOpen((open) => !open)}
+                  className="flex items-center gap-1.5 rounded-xl bg-white px-2.5 py-1.5 text-left text-xs font-medium text-zinc-700 shadow-sm ring-1 ring-zinc-200"
+                >
+                  <span>{legendLabel}</span>
+                  <ChevronDown className={cx("size-3.5 text-zinc-400 transition-transform duration-200 ease-out", legendOpen && "rotate-180")} />
+                </button>
+                <Disclosure open={legendOpen} className="absolute top-full right-0 z-10 mt-1 w-max max-w-72 rounded-xl bg-white shadow-sm ring-1 ring-zinc-200">
+                  <ul className="w-max max-w-72 space-y-2 px-2.5 py-2.5">
+                    {(Object.keys(legendDetail) as WorkItemState[]).map((state) => (
+                      <li key={state} className="flex items-start gap-2 text-xs text-zinc-600">
+                        <span className={cx("mt-1 size-2 shrink-0 rounded-full", stateMeta[state].dot)} />
+                        <span>
+                          <span className="font-medium text-zinc-800">{stateMeta[state].label}.</span> {legendDetail[state]}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </Disclosure>
+              </div>
+            </Panel>
+          )}
           <Panel position="bottom-left" className="!m-4">
             <div className="flex items-center gap-0.5 rounded-xl bg-white p-1 shadow-sm ring-1 ring-zinc-200">
               <IconButton label="Zoom in" onClick={() => void flow.zoomIn({ duration: 150 })}>
