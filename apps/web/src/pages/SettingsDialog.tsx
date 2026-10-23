@@ -458,6 +458,10 @@ function HelperTab({ token, settings, reload }: { token: string; settings: Proje
 
   return (
     <div className="space-y-7">
+      <div className="space-y-1 text-sm leading-relaxed text-zinc-600">
+        <p>macOS 26 can hide the menu bar icon. Allow Contour in System Settings → Menu Bar.</p>
+        <p>Safari 26 cannot reach the helper. Connect from Chrome or another browser.</p>
+      </div>
       {error ? <p className="text-sm text-rose-600">{error}</p> : null}
       <div className="rounded-xl p-4 ring-1 ring-zinc-200">
         <div className="flex items-start gap-3">

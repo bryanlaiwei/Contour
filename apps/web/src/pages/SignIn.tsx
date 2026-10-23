@@ -70,6 +70,12 @@ export function SignIn({ onSignIn }: { onSignIn: () => Promise<string | null> })
               </div>
             </li>
           </ol>
+          <p className="mt-4 text-sm text-zinc-600">
+            More on{" "}
+            <a href="/how-to" className="font-medium text-zinc-900 underline decoration-zinc-300 underline-offset-4 hover:decoration-zinc-900">
+              how to use Contour
+            </a>.
+          </p>
         </section>
 
         <section className="mt-14 pb-12" aria-labelledby="guide-heading">
