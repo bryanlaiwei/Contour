@@ -108,7 +108,6 @@ This release runs on a Mac. It reads Codex, Claude Code, and Cursor, and it uses
 
 Later:
 
-- **Multiplayer.** Share a project with other people.
 - **Your own API key.** Save a personal model key instead of using the server key.
 - **Windows.** Run the helper on Windows.
 - **More coding agents.** Read sessions from agents beyond Codex, Claude Code, and Cursor.
