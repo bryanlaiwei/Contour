@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { ApiError, api, errorMessage, type Me, type Project } from "./api";
+import { HowTo } from "./pages/HowTo";
 import { Onboarding } from "./pages/Onboarding";
 import { SignIn } from "./pages/SignIn";
 import { Workspace } from "./pages/Workspace";
@@ -98,6 +99,9 @@ function AppContent() {
     await supabase?.auth.signOut();
   }
 
+  if (window.location.pathname === "/how-to") {
+    return <HowTo />;
+  }
   if (!ready) {
     return (
       <div className="flex h-full items-center justify-center">
