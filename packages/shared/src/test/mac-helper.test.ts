@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { macHelperDownloadNote, macHelperDownloadUrl, macHelperInstallCommand, macHelperSiteOrigin, offerMacHelperDownload } from "../mac-helper.js";
+import { macHelperDownloadNote, macHelperDownloadUrl, macHelperInstallCommand, macHelperOpenCommand, macHelperSiteOrigin, offerMacHelperDownload } from "../mac-helper.js";
 
 describe("Mac helper download", () => {
   it("offers the Mac app on the hosted site only", () => {
@@ -10,6 +10,7 @@ describe("Mac helper download", () => {
       "Paste this in Terminal. It downloads the app and opens it. Allow folder access, then come back and click Connect this computer.",
     );
     expect(macHelperInstallCommand).toContain(`curl -fsSL -o /tmp/Contour-Mac.zip ${macHelperDownloadUrl}`);
-    expect(macHelperInstallCommand).toContain('open "$HOME/Applications/Contour.app"');
+    expect(macHelperOpenCommand).toBe('open "$HOME/Applications/Contour.app"');
+    expect(macHelperInstallCommand.endsWith(macHelperOpenCommand)).toBe(true);
   });
 });

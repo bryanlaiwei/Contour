@@ -15,6 +15,7 @@ export {
   macHelperDownloadNote,
   macHelperDownloadUrl,
   macHelperInstallCommand,
+  macHelperOpenCommand,
   macHelperSiteOrigin,
   offerMacHelperDownload,
 } from "./mac-helper.js";

@@ -1,5 +1,6 @@
 import { Activity, ChevronDown, KeyRound, Laptop, Settings2, Trash2, UserPlus, Users, X } from "lucide-react";
 import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from "react";
+import { macHelperOpenCommand } from "@apm/shared";
 import {
   addHelperFolder,
   api,
@@ -479,7 +480,7 @@ function HelperTab({ token, settings, reload }: { token: string; settings: Proje
             {here?.lastError && !here.needsPairing ? <p className="mt-1 text-xs break-words text-rose-600">{here.lastError}</p> : null}
             {overview !== undefined && !connected ? (
               <div className="mt-3">
-                <MacHelperDownload />
+                <MacHelperDownload command={macHelperOpenCommand} />
               </div>
             ) : null}
             <div className="mt-3 flex flex-col items-start gap-2 sm:flex-row sm:flex-wrap sm:items-center">
