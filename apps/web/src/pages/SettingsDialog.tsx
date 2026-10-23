@@ -449,10 +449,12 @@ function HelperTab({ token, settings, reload }: { token: string; settings: Proje
 
   const running = overview !== null && overview !== undefined;
   const status = overview?.status ?? null;
-  const here = status?.projects.find((entry) => entry.projectId === settings.project.id);
-  const others = status ? status.projects.length - (here ? 1 : 0) : 0;
+  // Pairing rows change as soon as this computer disconnects. The status snapshot can lag until the next scan.
+  const pairedHere = running && overview.pairings.some((entry) => entry.projectId === settings.project.id);
+  const here = pairedHere ? status?.projects.find((entry) => entry.projectId === settings.project.id) : undefined;
+  const others = running ? overview.pairings.filter((entry) => entry.projectId !== settings.project.id).length : 0;
   const folders = running ? overview.folders.filter((folder) => folder.enabled && folder.projectId === settings.project.id) : [];
-  const connected = here !== undefined && !here.needsPairing;
+  const connected = pairedHere && here?.needsPairing !== true;
   const folderCount = folders.length;
   const tone = !running ? "bg-zinc-300" : connected && folderCount > 0 ? "bg-emerald-500" : "bg-amber-400";
 
@@ -469,13 +471,13 @@ function HelperTab({ token, settings, reload }: { token: string; settings: Proje
                   ? "Checking for the helper…"
                   : !running
                     ? "The helper is not running on this computer."
-                    : !here
+                    : !pairedHere
                       ? `Running, but not connected to this project yet.${others > 0 ? ` It keeps collecting for ${others} other project${others === 1 ? "" : "s"}.` : ""}`
-                      : here.needsPairing
+                      : here?.needsPairing
                         ? "The server no longer accepts this computer for this project. Reconnect it."
                         : folderCount === 0
                           ? "Connected. Add the folder where you work on this project so sessions are collected."
-                          : `${folderCount} folder${folderCount === 1 ? "" : "s"} selected · last upload ${timeAgo(here.lastUploadAt, now)}${here.queued > 0 ? ` · ${here.queued} waiting` : ""}`}
+                          : `${folderCount} folder${folderCount === 1 ? "" : "s"} selected · last upload ${timeAgo(here?.lastUploadAt ?? null, now)}${(here?.queued ?? 0) > 0 ? ` · ${here?.queued} waiting` : ""}`}
             </p>
             {here?.lastError && !here.needsPairing ? <p className="mt-1 text-xs break-words text-rose-600">{here.lastError}</p> : null}
             {overview !== undefined && !connected ? (
@@ -485,9 +487,9 @@ function HelperTab({ token, settings, reload }: { token: string; settings: Proje
             ) : null}
             <div className="mt-3 flex flex-col items-start gap-2 sm:flex-row sm:flex-wrap sm:items-center">
               <Button size="sm" variant={connected ? "secondary" : "primary"} loading={connecting} onClick={() => void connect()}>
-                {here ? "Reconnect" : "Connect this computer"}
+                {pairedHere ? "Reconnect" : "Connect this computer"}
               </Button>
-              {here ? (
+              {pairedHere ? (
                 <Button size="sm" variant="ghost" className="-ml-2.5 sm:ml-0" loading={disconnecting} onClick={() => void disconnectHere()}>
                   Disconnect this computer
                 </Button>
@@ -568,22 +570,6 @@ function HelperTab({ token, settings, reload }: { token: string; settings: Proje
                     </p>
                   </div>
                 </div>
-                {device.yours || settings.role === "owner" ? (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="self-end sm:self-auto"
-                    onClick={() =>
-                      void api
-                        .revokeDevice(token, settings.project.id, device.id)
-                        .then(reload)
-                        .then(() => toast("Helper disconnected"))
-                        .catch((reason: unknown) => toast(errorMessage(reason, "Could not disconnect the helper."), "error"))
-                    }
-                  >
-                    Disconnect
-                  </Button>
-                ) : null}
               </li>
             ))}
           </ul>
