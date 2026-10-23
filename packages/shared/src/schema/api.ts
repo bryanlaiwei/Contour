@@ -346,6 +346,7 @@ export const correctionSchema = z.discriminatedUnion("kind", [
     artifactIds: z.array(id).default([]),
   }),
   z.object({ kind: z.literal("dismiss"), relationshipId: id }),
+  z.object({ kind: z.literal("delete"), target: z.literal("feature"), id }),
 ]);
 export type Correction = z.infer<typeof correctionSchema>;
 
