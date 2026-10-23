@@ -94,7 +94,7 @@ export function HowTo() {
           <div className="mt-4 grid gap-4 lg:grid-cols-3">
             <Card title="What a card means">A card is a feature. A draft pull request is in progress, an open one is in review, and work is merged only when the pull requests say so.</Card>
             <Card title="Open a card">Open a card for its work items, then a work item for pull requests, CI, session excerpts, and history. Lines between cards are relationships.</Card>
-            <Card title="Change the map">Drag cards, rename a title, or merge features and work items. Any member can do this.</Card>
+            <Card title="Change the map">Drag cards, rename a title, merge features and work items, or delete a card. Any member can do this.</Card>
           </div>
         </section>
       </div>

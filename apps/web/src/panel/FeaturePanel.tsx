@@ -1,10 +1,10 @@
-import { Ban, Combine, Ellipsis } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Ban, Combine, Ellipsis, Trash2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { api, type FeatureDetail, type Graph } from "../api";
 import { describeCounts } from "../format";
 import { useToast } from "../ui/toast-context";
 import { ContributorList, EditableTitle, IconButton, Menu, SectionTitle, Spinner, StateBar, StateChip } from "../ui/ui";
-import { MergeFeatureDialog } from "./Dialogs";
+import { ConfirmDialog, MergeFeatureDialog } from "./Dialogs";
 import { History } from "./History";
 import { PanelMessage } from "./PanelShell";
 import { useDetail } from "./useDetail";
@@ -18,6 +18,7 @@ export function FeaturePanel({
   onSelectFeature,
   onChanged,
   onGone,
+  onDeleted,
   viewerLogin,
   local,
 }: {
@@ -29,6 +30,8 @@ export function FeaturePanel({
   onSelectFeature: (id: string) => void;
   onChanged: () => Promise<void>;
   onGone: () => void;
+  /** Closes the panel after a member removes the card. Omitted on the sample map. */
+  onDeleted?: () => void;
   viewerLogin: string | null;
   /** Sample map on the signed-out page. The signed-in map keeps using the API. */
   local?: {
@@ -39,6 +42,8 @@ export function FeaturePanel({
 }) {
   const toast = useToast();
   const [merging, setMerging] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const removed = useRef(false);
   const { data, error, missing, loading } = useDetail(
     () => (local ? Promise.resolve({ revision: graph.revision, feature: local.feature }) : api.feature(token, projectId, featureId)),
     featureId,
@@ -54,7 +59,7 @@ export function FeaturePanel({
   }, [feature, featureId, onSelectFeature]);
 
   useEffect(() => {
-    if (missing) {
+    if (missing && !removed.current) {
       onGone();
     }
   }, [missing, onGone]);
@@ -90,6 +95,17 @@ export function FeaturePanel({
                 onSelect: () => setMerging(true),
                 disabled: graph.features.length < 2,
               },
+              ...(onDeleted
+                ? [
+                    {
+                      label: "Delete card",
+                      icon: <Trash2 className="size-4" />,
+                      danger: true,
+                      divider: true,
+                      onSelect: () => setDeleting(true),
+                    },
+                  ]
+                : []),
             ]}
           />
         </div>
@@ -173,6 +189,22 @@ export function FeaturePanel({
             onSelectFeature(survivingId);
             await onChanged();
             toast("Features merged");
+          }}
+        />
+      ) : null}
+      {deleting && onDeleted ? (
+        <ConfirmDialog
+          open
+          onClose={() => setDeleting(false)}
+          title="Delete this card?"
+          description={<>“{feature.title.value}” leaves the map, including its work items. The GitHub repository stays as it is. New work can appear as a new card.</>}
+          confirmLabel="Delete card"
+          danger
+          onConfirm={async () => {
+            removed.current = true;
+            await api.correct(token, projectId, { kind: "delete", target: "feature", id: feature.id });
+            await onChanged();
+            onDeleted();
           }}
         />
       ) : null}

@@ -432,6 +432,10 @@ export function Workspace({
                 onSelectFeature={selectFeature}
                 onChanged={load}
                 onGone={panelGone}
+                onDeleted={() => {
+                  setSelection(null);
+                  toast("Card deleted");
+                }}
                 viewerLogin={me.githubLogin}
               />
             ) : (

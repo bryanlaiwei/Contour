@@ -1106,4 +1106,53 @@ describe("interpretation and map maintenance", () => {
       await pool.query("delete from profiles where user_id = any($1::uuid[])", [[project.userId, mateId]]);
     }
   });
+
+  it("lets a project member delete a feature card", async () => {
+    const project = await newProject("delete-card", 22);
+    const memberId = "d3000000-0000-4000-8000-000000000220";
+    await pool.query(
+      `insert into memberships (workspace_id, user_id, role)
+       select workspace_id, $2, 'member' from projects where id = $1`,
+      [project.id, memberId],
+    );
+    const ai = new ScriptedInterpreter();
+    await session(project, "cursor", "delete-me", 10, [["user", "Add a billing page"]]);
+    await session(project, "cursor", "keep-me", 20, [["user", "Add a settings page"]]);
+    ai.then((context) => ({
+      operations: [
+        op.feature("new:billing", "Billing", [evidenceAlias(context, "billing")]),
+        op.item("new:bill", "new:billing", "Billing page", [evidenceAlias(context, "billing")], "in_progress"),
+        op.feature("new:settings", "Settings", [evidenceAlias(context, "settings")]),
+        op.item("new:set", "new:settings", "Settings page", [evidenceAlias(context, "settings")], "in_progress"),
+      ],
+    }));
+    await run(project, ai);
+    const shown = await onlyWorkItems(project);
+    const billing = shown.graph.features.find((feature) => feature.title === "Billing");
+    const billingId = billing?.id ?? "";
+    const billingItemId = billing?.workItems[0]?.id ?? "";
+    tokens.set("day3-member-22", memberId);
+    const deleted = await fetch(`${baseUrl}/projects/${project.id}/corrections`, {
+      method: "POST",
+      headers: { Authorization: "Bearer day3-member-22", "Content-Type": "application/json" },
+      body: JSON.stringify({ kind: "delete", target: "feature", id: billingId }),
+    });
+    expect(deleted.status).toBe(201);
+    const after = await onlyWorkItems(project);
+    expect(after.graph.features.map((feature) => feature.title)).toEqual(["Settings"]);
+    expect(after.graph.relationships).toEqual([]);
+    expect((await api(project, `/features/${billingId}`)).status).toBe(404);
+    expect((await api(project, `/work-items/${billingItemId}`)).status).toBe(404);
+    expect((await correct(project, { kind: "delete", target: "feature", id: billingId })).status).toBe(404);
+
+    const stranger = await newProject("delete-card-other", 23);
+    tokens.set(stranger.token, stranger.userId);
+    const forbidden = await fetch(`${baseUrl}/projects/${project.id}/corrections`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${stranger.token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ kind: "delete", target: "feature", id: shown.graph.features.find((feature) => feature.title === "Settings")?.id }),
+    });
+    expect(forbidden.status).toBe(404);
+    expect((await onlyWorkItems(project)).graph.features.map((feature) => feature.title)).toEqual(["Settings"]);
+  });
 });

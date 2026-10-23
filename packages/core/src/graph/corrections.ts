@@ -79,6 +79,9 @@ async function apply(scope: Scope, correction: Correction): Promise<string | nul
     case "dismiss":
       await dismiss(scope, correction.relationshipId);
       return null;
+    case "delete":
+      await deleteFeature(scope, correction.id);
+      return null;
     default: {
       const unhandled: never = correction;
       throw new CorrectionError("invalid", `Unknown correction ${JSON.stringify(unhandled)}.`);
@@ -383,6 +386,44 @@ async function split(scope: Scope, correction: Extract<Correction, { kind: "spli
     evidenceIds: [...evidenceIds],
   });
   return newId;
+}
+
+async function deleteFeature(scope: Scope, rawId: string): Promise<void> {
+  const feature = await activeFeature(scope, rawId);
+  const items = await scope.client.query<{ id: string; title: string }>(
+    `select id, title from work_items
+     where feature_id = $1 and project_id = $2 and retired_into is null
+     for update`,
+    [feature.id, scope.projectId],
+  );
+  for (const item of items.rows) {
+    await scope.client.query(
+      `update relationships set dismissed_at = now()
+       where project_id = $2 and dismissed_at is null and (from_work_item_id = $1 or to_work_item_id = $1)`,
+      [item.id, scope.projectId],
+    );
+    // Retiring into itself takes the work item off the map without inventing another item to merge into.
+    await scope.client.query(`update work_items set retired_into = id, updated_at = now() where id = $1`, [item.id]);
+    scope.changes.add({
+      entityKind: "work_item",
+      entityId: item.id,
+      change: "deleted",
+      before: { title: item.title, featureId: feature.id },
+      after: null,
+      basis: "human",
+      evidenceIds: [],
+    });
+  }
+  await scope.client.query(`update feature_groups set retired_into = id, updated_at = now() where id = $1`, [feature.id]);
+  scope.changes.add({
+    entityKind: "feature",
+    entityId: feature.id,
+    change: "deleted",
+    before: { title: feature.title },
+    after: null,
+    basis: "human",
+    evidenceIds: [],
+  });
 }
 
 async function dismiss(scope: Scope, relationshipId: string): Promise<void> {
