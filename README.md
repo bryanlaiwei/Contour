@@ -52,18 +52,18 @@ GitHub reaches the API through a webhook. The API stores the delivery and answer
 
 ## What you can do
 
-Set up a project:
-▎
-▎ - Sign in with GitHub and connect a repository you can write to. Each repository belongs to one project.
-▎ - Pair the local helper on your computer so it can read your coding-agent sessions.
-▎ - Add members who have already signed in. They see and update the same map.
-▎
-▎ Use the map:
-▎
-▎ - Each feature is a card that updates on its own, whether the site is open or closed.
-▎ - Open a card for its work items, then a work item for its pull requests, CI runs, session excerpts and history.
-▎ - Status follows GitHub. An open pull request means in review, a draft means in progress, and work counts as merged only when its pull requests say so. An agent saying "done" never counts.
-▎ - Rename, move or delete cards, and merge features or work items.
+**Set up a project:**
+
+- Sign in with GitHub and connect a repository you can write to. Each repository belongs to one project.
+- Pair the local helper on your computer so it can read your coding-agent sessions.
+- Add members who have already signed in. They see and update the same map.
+
+**Use the map:**
+
+- Each feature is a card that updates on its own, whether the site is open or closed.
+- Open a card for its work items, then a work item for its pull requests, CI runs, session excerpts and history.
+- Status follows GitHub. An open pull request means in review, a draft means in progress, and work counts as merged only when its pull requests say so. An agent saying "done" never counts.
+- Rename, move or delete cards, and merge features or work items.
 
 ## Project structure
 
