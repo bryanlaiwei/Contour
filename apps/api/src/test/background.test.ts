@@ -117,18 +117,21 @@ describe("background GitHub work", () => {
   }
 
   it("refresh stores a pull request merge that no webhook reported, once", async () => {
-    const opened = pullRequest({ id: 3101, number: 11, state: "open", merged: false, updatedAt: "2026-09-25T10:00:00.000Z" });
+    // Refresh only re-reads pull requests updated within pullRequestMaxAgeDays.
+    const openedAt = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString();
+    const mergedAt = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    const opened = pullRequest({ id: 3101, number: 11, state: "open", merged: false, updatedAt: openedAt });
     pulls.set(11, opened);
     expect((await postWebhook("pull_request", "bg-pr-opened", { repository: { id: repoId }, pull_request: opened })).status).toBe(202);
     await processQueuedDeliveries(pool, github, { deliveryIds: ["bg-pr-opened"] });
 
-    pulls.set(11, pullRequest({ id: 3101, number: 11, state: "closed", merged: true, updatedAt: "2026-09-25T11:00:00.000Z" }));
+    pulls.set(11, pullRequest({ id: 3101, number: 11, state: "closed", merged: true, updatedAt: mergedAt }));
     const first = await refreshObservedGithub(pool, github, { projectId, writeEvents: (events) => insertEvents(pool, events) });
     expect(first.eventsStored).toBeGreaterThanOrEqual(1);
 
     const stored = await pool.query<{ details: { merged: boolean; state: string } }>(
       "select details from normalized_events where event_id = $1",
-      ["github:refresh:pull_request:3101:2026-09-25T11:00:00.000Z"],
+      [`github:refresh:pull_request:3101:${mergedAt}`],
     );
     expect(stored.rows[0]?.details).toMatchObject({ merged: true, state: "closed" });
     const observation = await pool.query<{ merged: boolean; refreshed_at: Date | null }>(
