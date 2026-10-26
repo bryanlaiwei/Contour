@@ -109,7 +109,7 @@ Open `http://127.0.0.1:5173`. In **Settings → Local helper**, click **Connect 
 > [!TIP]
 > To look around without an OpenAI key of your own, sign in once and run `npm run demo:seed -w @apm/api -- your-github-username`. That adds `demo/shop-app`. On the hosted app, grouping uses one server key so people can try the map.
 
-## Scope
+## Scope and limitations
 
 This release runs on a Mac. It reads Codex, Claude Code, and Cursor, and it uses one server OpenAI key so visitors can try grouping without bringing their own.
 
